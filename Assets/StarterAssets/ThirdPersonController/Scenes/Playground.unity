@@ -798,8 +798,20 @@ PrefabInstance:
       value: PlayerArmature
       objectReference: {fileID: 0}
     - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
+      propertyPath: lookSensitivity.x
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
+      propertyPath: lookSensitivity.y
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: GroundLayers.m_Bits
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5885216827943657505, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
+      propertyPath: canPush
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6096361565919915494, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -807,15 +819,15 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 8e0a863e874b89f44aaf54552a78f9ee, type: 2}
     - target: {fileID: 6096361565922340614, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.059
+      value: 0.039
       objectReference: {fileID: 0}
     - target: {fileID: 6096361565922340614, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.054
+      value: -0.08
       objectReference: {fileID: 0}
     - target: {fileID: 6096361565922340614, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.003
+      value: -0.008
       objectReference: {fileID: 0}
     - target: {fileID: 6096361565922340614, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_LocalRotation.w

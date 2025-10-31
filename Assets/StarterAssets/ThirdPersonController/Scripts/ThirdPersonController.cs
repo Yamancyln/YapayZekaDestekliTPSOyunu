@@ -21,6 +21,9 @@ namespace StarterAssets
         [Tooltip("Sprint speed of the character in m/s")]
         public float SprintSpeed = 5.335f;
 
+        [Tooltip("Player mouse look sensitivity")] // Game World Enginering Youtube kanalında "Setting Up Unity's Third Person Controller Starter Asset | Unity 6 URP" videosundan alındı
+        public Vector2 lookSensitivity = new Vector2(1, 1);   // https://www.youtube.com/watch?v=EmmrECfgHHM
+
         [Tooltip("How fast the character turns to face movement direction")]
         [Range(0.0f, 0.3f)]
         public float RotationSmoothTime = 0.12f;
@@ -198,8 +201,8 @@ namespace StarterAssets
                 //Don't multiply mouse input by Time.deltaTime;
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
-                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
-                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
+                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier * lookSensitivity.x; // Game World Enginering Youtube kanalında "Setting Up Unity's Third Person Controller Starter Asset | Unity 6 URP" videosundan alındı
+                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier * lookSensitivity.y; // https://www.youtube.com/watch?v=EmmrECfgHHM
             }
 
             // clamp our rotations so our values are limited 360 degrees
