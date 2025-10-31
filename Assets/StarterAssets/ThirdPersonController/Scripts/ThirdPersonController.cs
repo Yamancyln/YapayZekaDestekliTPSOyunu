@@ -14,6 +14,8 @@ namespace StarterAssets
 #endif
     public class ThirdPersonController : MonoBehaviour
     {
+        public GameObject gunObject;
+
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
@@ -162,6 +164,9 @@ namespace StarterAssets
             JumpAndGravity();
             GroundedCheck();
             Move();
+            //HandleAiming();
+            HandleFiring();
+            HandleCrouching();
         }
 
         private void LateUpdate()
@@ -349,6 +354,39 @@ namespace StarterAssets
             {
                 _verticalVelocity += Gravity * Time.deltaTime;
             }
+        }
+
+        //[SerializeField] private GameObject gunObject;
+        ////[SerializeField] private AnimatorOverrideController aimingAnimator;
+        ////[SerializeField] private AnimatorOverrideController defaultAnimator;
+
+        //private void HandleAiming()
+        //{
+        //    if (_input.aim)
+        //    {
+        //        // nişan alma animasyonu, silah pozisyonu vs.
+        //        _animator.runtimeAnimatorController = aimingAnimator;
+        //        gunObject.SetActive(true); // silahı görünür yap
+        //    }
+        //    else
+        //    {
+        //        _animator.runtimeAnimatorController = defaultAnimator;
+        //        gunObject.SetActive(false); // normal duruma dön
+        //    }
+        //}
+
+        private void HandleFiring()
+        {
+            if (_input.fire && _input.aim)
+            {
+                // buraya raycast ile hedef vurma, mermi çıkışı vs. yazılabilir
+                Debug.Log("Ateş edildi");
+            }
+        }
+
+        private void HandleCrouching()
+        {
+            _animator.SetBool("Crouch", _input.crouch);
         }
 
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
