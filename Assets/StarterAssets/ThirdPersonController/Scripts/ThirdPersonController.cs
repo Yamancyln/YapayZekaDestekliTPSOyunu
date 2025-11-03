@@ -16,8 +16,11 @@ namespace StarterAssets
     {
 
         [Header("Player")]
-        [Tooltip("Crouch speed of the character in m/s")]
-        public float CrouchSpeed = 1.0f;
+        [Tooltip("Move speed of the character in m/s")] //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı.                                                        
+        public float StrafeSpeed = 0.4f;                //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
+
+        [Tooltip("Crouch speed of the character in m/s")] //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+        public float CrouchSpeed = 1.0f;                  //https://www.youtube.com/watch?v=7ZDTBkaUTlw
 
         [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
@@ -87,6 +90,7 @@ namespace StarterAssets
         private float _cinemachineTargetPitch;
 
         // player
+        public bool Strafe; //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı. //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
@@ -94,6 +98,8 @@ namespace StarterAssets
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
 
+        //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+        //https://www.youtube.com/watch?v=7ZDTBkaUTlw
         [Header("Crouching")]
         [SerializeField] private float crouchHeight = 1.2f;
         [SerializeField] private Vector3 crouchCenter = new Vector3(0, 0.595f, 0);
@@ -167,8 +173,8 @@ namespace StarterAssets
             _fallTimeoutDelta = FallTimeout;
 
             //CROUCH VALUES
-            standCenter = _controller.center;
-            standHeight = _controller.height;
+            standCenter = _controller.center; //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            standHeight = _controller.height; //https://www.youtube.com/watch?v=7ZDTBkaUTlw
         }
 
         private void Update()
@@ -180,8 +186,8 @@ namespace StarterAssets
             Move();
             UpdateControllerCollider();
 
-            if (_input.crouch)
-            {
+            if (_input.crouch) //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            {                              //https://www.youtube.com/watch?v=7ZDTBkaUTlw
                 crouched = !crouched;
                 _input.crouch = false;
             }
@@ -224,6 +230,7 @@ namespace StarterAssets
                 //Don't multiply mouse input by Time.deltaTime;
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
+                //Mouse hareketi ile dinamik kamera bakışı
                 _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier * lookSensitivity.x; // Game World Enginering Youtube kanalında "Setting Up Unity's Third Person Controller Starter Asset | Unity 6 URP" videosundan alındı
                 _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier * lookSensitivity.y; // https://www.youtube.com/watch?v=EmmrECfgHHM
             }
@@ -239,11 +246,13 @@ namespace StarterAssets
 
         private void Move()
         {
-            // set target speed based on move speed, sprint speed and if sprint is pressed
+            // hareket hızı, sprint hızı ve sprint tuşuna ve crouch tuşuna(ctrl) basılıp basılmadığına göre hedef hızı ayarlama
+            //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            //https://www.youtube.com/watch?v=7ZDTBkaUTlw
             float targetSpeed = _input.sprint ? SprintSpeed : crouched ? CrouchSpeed : MoveSpeed;
 
-            if (_input.sprint)
-                crouched = false;
+            if (_input.sprint)   //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+                crouched = false;  //https://www.youtube.com/watch?v=7ZDTBkaUTlw
 
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
@@ -279,6 +288,7 @@ namespace StarterAssets
 
             // normalise input direction
             Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
             // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is a move input rotate player when the player is moving
@@ -286,6 +296,25 @@ namespace StarterAssets
             {
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
+            }
+
+            if (Strafe)     //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı.
+            {               //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
+                targetSpeed = StrafeSpeed;
+
+                _targetRotation = _cinemachineTargetYaw; //Kameranın hedef yönünde bakması için 
+                transform.rotation = Quaternion.Euler(0, _targetRotation, 0);
+
+                targetDirection = transform.forward * inputDirection.z + transform.right * inputDirection.x;
+
+                float currentX = _animator.GetFloat("X");
+                float currentY = _animator.GetFloat("Y");
+
+                _animator.SetFloat("X", Mathf.Lerp(currentX, inputDirection.x, SpeedChangeRate * Time.deltaTime));
+                _animator.SetFloat("Y", Mathf.Lerp(currentY, inputDirection.z, SpeedChangeRate * Time.deltaTime));
+            }
+            else
+            {
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
                     RotationSmoothTime);
 
@@ -293,14 +322,13 @@ namespace StarterAssets
                 transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
 
-
-            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
-
             // move the player
             _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
                              new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
-            // update animator if using character
+            //Karakter kullanılıyorsa animatörü güncelleme
+            //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            //https://www.youtube.com/watch?v=7ZDTBkaUTlw
             if (_hasAnimator)
             {
                 _animator.SetFloat(_animIDSpeed, _animationBlend);
@@ -309,8 +337,8 @@ namespace StarterAssets
             }
         }
 
-        private void UpdateControllerCollider()
-        {
+        private void UpdateControllerCollider() //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.                                              
+        {                                       //https://www.youtube.com/watch?v=7ZDTBkaUTlw
             Vector3 targetCenter = standCenter;
             float targetHeight = standHeight;
 
