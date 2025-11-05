@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
 
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E01): STATE MACHINE BEHAVIORS" adlı videodan yardım alınmıştır.
 public class PatrolState : StateMachineBehaviour
 {
     float timer;

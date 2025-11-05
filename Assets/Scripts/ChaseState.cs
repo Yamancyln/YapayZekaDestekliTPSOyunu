@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E02): CHASE AND ATTACK" adlı videodan yardım alınmıştır.
 public class ChaseState : StateMachineBehaviour
 {
     NavMeshAgent agent;

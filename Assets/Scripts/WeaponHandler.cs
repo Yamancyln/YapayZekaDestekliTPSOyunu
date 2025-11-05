@@ -1,106 +1,122 @@
-using UnityEngine;
-using StarterAssets;
-using UnityEngine.Animations.Rigging;
-using Unity.Cinemachine;
-using System.Collections;
+using UnityEngine; // Unity motorunun temel işlevlerine erişim sağlar (GameObject, Component, vb.).
+using StarterAssets; // Starter Assets paketindeki karakter kontrolcüleri gibi sınıfları kullanmak için.
+using UnityEngine.Animations.Rigging; // Unity'nin Animasyon Rigging sistemi (IK, vb.) bileşenlerine erişim sağlar.
+using Unity.Cinemachine; // Cinemachine sanal kamera sistemine erişim sağlar.
+using System.Collections; // Coroutine (eş zamanlı çalışan rutinler) kullanmak için gereklidir.
 
-//Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı.
-//https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
+// Bu script, üçüncü şahıs nişancı oyunlarında silah tutma, nişan alma, atış yapma, kamera ve IK geçişlerini yönetir.
+//Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan yardım alındı.
 public class WeaponHandler : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private CinemachineThirdPersonFollow cm_camera;
-    private Animator anim;
-    private ThirdPersonController controller;
+    // === REFERANSLAR ===
+    [Header("References")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private CinemachineThirdPersonFollow cm_camera; // Cinemachine kamerasının takip bileşenine referans. Nişan alma sırasında kamera pozisyonunu değiştirmek için kullanılır.
+    private Animator anim; // Karakterin Animator bileşenine referans. Animasyonları (nişan alma, ateş etme) kontrol etmek için.
+    private ThirdPersonController controller; // StarterAssets'ten gelen karakter hareket kontrolcüsüne referans. Nişan alırken yana yürüme (strafe) modunu etkinleştirmek için.
 
-    [Header("Shooting")]
-    [SerializeField] private float fireRate = 0.09f;
-    [SerializeField] private float shootBlendTime = 0.075f;
-    [SerializeField] private string shootStateName = "Fire_Rifle";
-    [SerializeField] private AudioClip shootSound;
-    [SerializeField] private ParticleSystem muzzleFlash;
-    private bool canShoot = true;
+    // === ATIŞ AYARLARI ===
+    [Header("Shooting")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private float fireRate = 0.09f; // Silahın atış hızı (iki atış arasındaki minimum bekleme süresi).
+    [SerializeField] private float shootBlendTime = 0.075f; // Atış animasyonuna geçiş (crossfade) süresi.
+    [SerializeField] private string shootStateName = "Fire_Rifle"; // Atış animasyonunun Animator'daki state adı.
+    [SerializeField] private AudioClip shootSound; // Atış sırasında çalınacak ses klibi.
+    [SerializeField] private ParticleSystem muzzleFlash; // Namlu alevi (muzzle flash) parçacık sistemi efekti.
+    private bool canShoot = true; // Ateş edip edemeyeceğimizi kontrol eden bayrak (fireRate ile kontrol edilir).
 
-    [Header("Aiming")]
-    [SerializeField] private float cameraTransitionSpeed = 7f;
-    [SerializeField] private float ikTransitionSpeed = 10f;
-    [SerializeField] private MultiAimConstraint aimIk;
-    [Space(10)]
-    [SerializeField] private float aimVerticalArmLength = 0.2f;
-    [SerializeField] private float aimCameraSide = 0.75f;
-    [SerializeField] private float aimCameraDistance = 0.85f;
-    private float defaultVerticalArmLength;
-    private float defaultCameraSide;
-    private float defaultCameraDistance;
+    // === NİŞAN ALMA (AIMING) AYARLARI ===
+    [Header("Aiming")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private float cameraTransitionSpeed = 7f; // Kamera pozisyonu geçişlerinin yumuşaklık hızı.
+    [SerializeField] private float ikTransitionSpeed = 10f; // IK ağırlığının geçiş yumuşaklık hızı.
+    [SerializeField] private MultiAimConstraint aimIk; // Silahın hedefe bakmasını sağlayan MultiAimConstraint IK bileşenine referans.
+    [Space(10)] // Inspector'da görsel boşluk bırakır.
+    [SerializeField] private float aimVerticalArmLength = 0.2f; // Nişan alırken Cinemachine'in dikey kol uzunluğu.
+    [SerializeField] private float aimCameraSide = 0.75f; // Nişan alırken kameranın yana kayma miktarı (omuz üstü nişan).
+    [SerializeField] private float aimCameraDistance = 0.85f; // Nişan alırken kameranın karakterden uzaklığı.
+    private float defaultVerticalArmLength; // Nişan almıyorken varsayılan dikey kol uzunluğu.
+    private float defaultCameraSide; // Nişan almıyorken varsayılan yana kayma miktarı.
+    private float defaultCameraDistance; // Nişan almıyorken varsayılan kamera uzaklığı.
 
-    public bool Aiming { get; private set; }
+    public bool Aiming { get; private set; } // Nişan alma durumunu tutan ve dışarıdan sadece okunabilen özellik.
 
-    [Header("UI")]
-    [SerializeField] private GameObject crosshair;
+    // === KULLANICI ARAYÜZÜ (UI) ===
+    [Header("UI")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private GameObject crosshair; // Nişan imleci (crosshair) GameObject'ine referans.
 
     private void Start()
     {
-        anim = GetComponent<Animator>();
-        controller = GetComponent<ThirdPersonController>();
+        anim = GetComponent<Animator>(); // Script'in bulunduğu GameObject'teki Animator bileşenini alır.
+        controller = GetComponent<ThirdPersonController>(); // ThirdPersonController bileşenini alır.
 
+        // Cinemachine kamerasının varsayılan pozisyon ayarlarını kaydederek nişan alma bitince geri dönülmesini sağlar.
         defaultVerticalArmLength = cm_camera.VerticalArmLength;
         defaultCameraSide = cm_camera.CameraSide;
         defaultCameraDistance = cm_camera.CameraDistance;
     }
 
+    // Her karede bir kez çağrılır. Oyun mantığının çoğunu içerir.
     private void Update()
     {
-        // INPUT
-        Aiming = Input.GetButton("Fire2");
-        bool shootInp = Input.GetButton("Fire1");
+        // === GİRİŞ (INPUT) YÖNETİMİ ===
+        Aiming = Input.GetButton("Fire2"); // "Fire2" (varsayılan sağ fare tuşu) basılı mı kontrol eder.
+        bool shootInp = Input.GetButton("Fire1"); // "Fire1" (varsayılan sol fare tuşu) basılı mı kontrol eder.
 
-        // ANIMATIONS
-        anim.SetBool("Aiming", Aiming);
-        controller.Strafe = Aiming;
+        // === ANİMASYONLAR VE HAREKET ===
+        anim.SetBool("Aiming", Aiming); // Animator'daki "Aiming" boolean parametresini günceller (nişan alma animasyonu).
+        controller.Strafe = Aiming; // Nişan alıyorsa (Aiming true ise) karakteri yana yürüme (strafe) moduna geçirir.
 
-        // ADJUST CAMERA
+        // === KAMERA AYARLAMA (SMOOTH TRANSITION) ===
+        // Nişan alma durumuna (Aiming) göre hedeflenen kamera pozisyon değerlerini (aim veya default) belirler.
         float targetVerticalArmLength = Aiming ? aimVerticalArmLength : defaultVerticalArmLength;
         float targetSide = Aiming ? aimCameraSide : defaultCameraSide;
         float targetDistance = Aiming ? aimCameraDistance : defaultCameraDistance;
 
+        // Cinemachine kamera parametrelerini, belirlenen hedefe doğru yumuşak bir geçişle (Mathf.Lerp) hareket ettirir.
         cm_camera.VerticalArmLength = Mathf.Lerp(cm_camera.VerticalArmLength, targetVerticalArmLength, cameraTransitionSpeed * Time.deltaTime);
         cm_camera.CameraSide = Mathf.Lerp(cm_camera.CameraSide, targetSide, cameraTransitionSpeed * Time.deltaTime);
         cm_camera.CameraDistance = Mathf.Lerp(cm_camera.CameraDistance, targetDistance, cameraTransitionSpeed * Time.deltaTime);
 
-        //UI
-        crosshair.SetActive(Aiming);
+        // === KULLANICI ARAYÜZÜ (UI) ===
+        crosshair.SetActive(Aiming); // Nişan alınıyorsa crosshair'ı gösterir, aksi halde gizler.
 
-        //IK
+        // === TERS KİNEMATİK (IK) YÖNETİMİ ===
+        // Nişan alınıyorsa IK ağırlığını 1'e, almıyorsa 0'a hedefler.
         float targetWeight = Aiming ? 1 : 0;
+        // IK ağırlığını yumuşak bir şekilde hedeflenen değere doğru hareket ettirir.
         aimIk.weight = Mathf.Lerp(aimIk.weight, targetWeight, ikTransitionSpeed * Time.deltaTime);
 
-        //SHOOT
-        if (shootInp && Aiming)
-            Shoot();
+
+        // === ATIŞ KONTROLÜ ===
+        if (shootInp && Aiming) // Ateş etme tuşuna basıldıysa VE karakter nişan alıyorsa.
+            Shoot(); // Atış fonksiyonunu çağırır.
     }
 
+    // Silahın ateş etme mantığını içeren fonksiyon.
     private void Shoot()
     {
-        if (!canShoot)
-            return;
 
-        AudioSource.PlayClipAtPoint(shootSound, transform.position);
-        muzzleFlash.Play();
-        anim.CrossFadeInFixedTime(shootStateName, shootBlendTime);
-        StartCoroutine("ResetFireRate");
+        if (!canShoot) // canShoot bayrağını kontrol ederek atış hızını kısıtlar.
+            return; // Eğer henüz atış süresi dolmadıysa fonksiyondan çıkar.
+
+        AudioSource.PlayClipAtPoint(shootSound, transform.position); // Atış sesini karakterin pozisyonunda bir kerelik oynatır.
+        muzzleFlash.Play(); // Namlu alevi efektini başlatır.
+        anim.CrossFadeInFixedTime(shootStateName, shootBlendTime); // Atış animasyonunu belirlenen süre içinde oynatmaya başlar.
+        StartCoroutine("ResetFireRate"); // Ateş etme bekleme süresini başlatan coroutine'i çağırır.
 
         //chatGPT den yardım alındı bu kısım için
-        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); // Crosshair ortası
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        // === IŞIN FIRLATMA (RAYCAST) İLE HEDEF TESPİTİ ===
+        // Kameranın ekran ortasından (crosshair'ın pozisyonu) bir ışın (ray) oluşturur.
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); // Viewport'ta (0,0) alt sol, (1,1) sağ üsttür. (0.5, 0.5) tam ortadır.
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f)) // Raycast'i fırlatır. Eğer ışın bir cisme çarparsa ve mesafe 100f içindeyse:
         {
-            Debug.Log("Hit Object: " + hit.collider.name + " | Tag: " + hit.collider.tag); 
+            Debug.Log("Hit Object: " + hit.collider.name + " | Tag: " + hit.collider.tag);  
             Debug.DrawRay(ray.origin, ray.direction * hit.distance, Color.red, 1f);
 
-            Zombie zombi = hit.collider.GetComponentInParent<Zombie>();
-            if (zombi != null)
+            Zombie zombi = hit.collider.GetComponentInParent<Zombie>(); // Çarptığı cismin collider'ında "Zombie" bileşeni var mı diye bakar.
+            if (zombi != null)  // Eğer bir Zombi bileşeni bulunursa.
             {
+                // Çarptığı collider'ın etiketi "ZombieHead" ise 100 hasar (kafa vuruşu), aksi takdirde 34 hasar belirler.
                 int damage = hit.collider.CompareTag("ZombieHead") ? 100 : 34; // Kafaya ateş edildiğinde tek atışla zombi ölür onun dışındaki bölgelere daha az hasar verili
-                zombi.TakeDamage(damage);
+                zombi.TakeDamage(damage);  // Zombi'nin hasar alma fonksiyonunu çağırır.
 
                 if (hit.collider.CompareTag("ZombieHead"))
                     Debug.Log("HEADSHOT!");
@@ -108,10 +124,11 @@ public class WeaponHandler : MonoBehaviour
         }
     }
 
+    // Ateş etme bekleme süresini (fireRate) yöneten coroutine.
     private IEnumerator ResetFireRate()
     {
-        canShoot = false;
-        yield return new WaitForSeconds(fireRate);
-        canShoot = true;
+        canShoot = false; // Hemen yeni bir atışı engeller.
+        yield return new WaitForSeconds(fireRate); // 'fireRate' saniye kadar bekler.
+        canShoot = true; // Bekleme süresi bittikten sonra tekrar atış yapılmasına izin verir.
     }
 }

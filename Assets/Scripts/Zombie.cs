@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E03): TAKE DAMAGE & DEATH" ve "3D ENEMY AI in UNITY - (E04): HEALTH BAR" adlı videodan yardım alınmıştır.
+
 public class Zombie : MonoBehaviour
 {
     private int currentHealth = 100;
@@ -9,7 +11,7 @@ public class Zombie : MonoBehaviour
 
     void Update()
     {
-        if (healthBar != null)
+        if (healthBar != null) 
             healthBar.value = currentHealth;
     }
 
