@@ -52,9 +52,19 @@ public class PauseMenu : MonoBehaviour
     }
 
     public void GoToMainMenu()
-{
+    {
     Time.timeScale = 1f; // oyunu normale döndür
     UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-}
+    }
+
+    public void QuitGame()
+    {
+        Debug.Log("Oyun kapatılıyor...");
+        Application.Quit();
+
+    #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;  // oyunu play modundan çıkararak oyunu kapatmış olur. Not: Kod chatGPT'den alındı.
+    #endif
+    }
 
 }
