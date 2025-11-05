@@ -89,21 +89,14 @@ public class WeaponHandler : MonoBehaviour
         anim.CrossFadeInFixedTime(shootStateName, shootBlendTime);
         StartCoroutine("ResetFireRate");
 
-        //chatGPT den yardım alındı bu kısım için
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); // Crosshair ortası
         if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
-            Debug.Log("Hit Object: " + hit.collider.name + " | Tag: " + hit.collider.tag); 
-            Debug.DrawRay(ray.origin, ray.direction * hit.distance, Color.red, 1f);
-
-            Zombie zombi = hit.collider.GetComponentInParent<Zombie>();
+            Zombie zombi = hit.collider.GetComponent<Zombie>();
             if (zombi != null)
             {
-                int damage = hit.collider.CompareTag("ZombieHead") ? 100 : 34; // Kafaya ateş edildiğinde tek atışla zombi ölür onun dışındaki bölgelere daha az hasar verili
-                zombi.TakeDamage(damage);
-
-                if (hit.collider.CompareTag("ZombieHead"))
-                    Debug.Log("HEADSHOT!");
+                int damage = hit.collider.CompareTag("ZombieHead") ? 100 : 34;
+                zombi.TakeDamage(damage); // Verilecek hasar
             }
         }
     }
