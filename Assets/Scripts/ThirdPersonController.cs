@@ -179,6 +179,11 @@ namespace StarterAssets
 
         private void Update()
         {
+            if (PauseMenu.GameIsPaused)
+    return;
+
+
+
             _hasAnimator = TryGetComponent(out _animator);
 
             JumpAndGravity();
@@ -195,6 +200,9 @@ namespace StarterAssets
 
         private void LateUpdate()
         {
+            if (PauseMenu.GameIsPaused)
+    return;
+
             CameraRotation();
         }
 
