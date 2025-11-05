@@ -278,10 +278,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e45f7cc75b91e4e9873b4b2118720d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  currentHealth: 0
-  isDead: 0
-  healthBar: {fileID: 0}
 --- !u!114 &92825281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -294,15 +290,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36a644330e374cd489836bf4fb23afae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 3893294199639930361}
-  agent: {fileID: 0}
-  animator: {fileID: 0}
-  playerHealth: {fileID: 0}
-  attackDistance: 2
-  lookSpeed: 5
-  attackDamage: 10
-  attackCooldown: 1.5
-  lastAttackTime: 0
 --- !u!195 &92825282
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -471,9 +458,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1098578381}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
+  m_MaxValue: 100
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 100
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -980,10 +967,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e45f7cc75b91e4e9873b4b2118720d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  currentHealth: 0
-  isDead: 0
-  healthBar: {fileID: 0}
 --- !u!114 &582711091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -996,15 +979,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36a644330e374cd489836bf4fb23afae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 3893294199639930361}
-  agent: {fileID: 0}
-  animator: {fileID: 0}
-  playerHealth: {fileID: 0}
-  attackDistance: 2
-  lookSpeed: 5
-  attackDamage: 10
-  attackCooldown: 1.5
-  lastAttackTime: 0
 --- !u!195 &582711092
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2061,10 +2035,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e45f7cc75b91e4e9873b4b2118720d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  currentHealth: 0
-  isDead: 0
-  healthBar: {fileID: 0}
 --- !u!114 &897431591
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2077,15 +2047,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36a644330e374cd489836bf4fb23afae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 3893294199639930361}
-  agent: {fileID: 0}
-  animator: {fileID: 0}
-  playerHealth: {fileID: 0}
-  attackDistance: 2
-  lookSpeed: 5
-  attackDamage: 10
-  attackCooldown: 1.5
-  lastAttackTime: 0
 --- !u!195 &897431592
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2189,7 +2150,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.23589353, g: 0.5377358, b: 0.25098923, a: 1}
+  m_Color: {r: 0.09834461, g: 0.3207547, b: 0.09929522, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3716,15 +3677,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36a644330e374cd489836bf4fb23afae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 3893294199639930361}
-  agent: {fileID: 0}
-  animator: {fileID: 0}
-  playerHealth: {fileID: 0}
-  attackDistance: 2
-  lookSpeed: 5
-  attackDamage: 10
-  attackCooldown: 1.5
-  lastAttackTime: 0
 --- !u!195 &1748062543
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -3759,10 +3711,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e45f7cc75b91e4e9873b4b2118720d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  currentHealth: 0
-  isDead: 0
-  healthBar: {fileID: 0}
 --- !u!95 &1748062545 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 3568628872616989892, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
@@ -7067,10 +7015,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e45f7cc75b91e4e9873b4b2118720d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  currentHealth: 0
-  isDead: 0
-  healthBar: {fileID: 399151914}
 --- !u!4 &6983258930626336602
 Transform:
   m_ObjectHideFlags: 0
