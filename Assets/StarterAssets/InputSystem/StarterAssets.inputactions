@@ -43,8 +43,8 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Aim",
-                    "type": "Button",
+                    "name": "Aiming",
+                    "type": "PassThrough",
                     "id": "ca80ce9e-6fa6-46a7-bba4-ad59ffbb2ab5",
                     "expectedControlType": "",
                     "processors": "",
@@ -254,7 +254,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";KeyboardMouse",
-                    "action": "Aim",
+                    "action": "Aiming",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

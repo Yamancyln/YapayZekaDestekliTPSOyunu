@@ -23,7 +23,7 @@ namespace StarterAssets
         public float CrouchSpeed = 1.0f;                  //https://www.youtube.com/watch?v=7ZDTBkaUTlw
 
         [Tooltip("Move speed of the character in m/s")]
-        public float MoveSpeed = 2.0f;
+        public float MoveSpeed = 2.5f;
 
         [Tooltip("Sprint speed of the character in m/s")]
         public float SprintSpeed = 5.335f;

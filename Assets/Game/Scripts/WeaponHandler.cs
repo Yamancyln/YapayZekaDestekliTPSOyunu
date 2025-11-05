@@ -6,7 +6,7 @@ using System.Collections;
 
 //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı.
 //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
-public class NewMonoBehaviourScript : MonoBehaviour
+public class WeaponHandler : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private CinemachineThirdPersonFollow cm_camera;
@@ -55,7 +55,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
         bool shootInp = Input.GetButton("Fire1");
 
         // ANIMATIONS
-        anim.SetBool("Aining", Aiming);
+        anim.SetBool("Aiming", Aiming);
         controller.Strafe = Aiming;
 
         // ADJUST CAMERA
@@ -88,6 +88,17 @@ public class NewMonoBehaviourScript : MonoBehaviour
         muzzleFlash.Play();
         anim.CrossFadeInFixedTime(shootStateName, shootBlendTime);
         StartCoroutine("ResetFireRate");
+
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); // Crosshair ortası
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        {
+            Zombie zombi = hit.collider.GetComponent<Zombie>();
+            if (zombi != null)
+            {
+                int damage = hit.collider.CompareTag("ZombieHead") ? 100 : 34;
+                zombi.TakeDamage(damage); // Verilecek hasar
+            }
+        }
     }
 
     private IEnumerator ResetFireRate()
