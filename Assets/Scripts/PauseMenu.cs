@@ -51,11 +51,10 @@ public class PauseMenu : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    public void QuitGame()
-    {
-        Time.timeScale = 1f;
-        GameIsPaused = false;
-        Application.Quit();
-        Debug.Log("Oyun kapatıldı!");
-    }
+    public void GoToMainMenu()
+{
+    Time.timeScale = 1f; // oyunu normale döndür
+    UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+}
+
 }
