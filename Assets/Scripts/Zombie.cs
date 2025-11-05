@@ -3,24 +3,30 @@ using UnityEngine.UI;
 
 public class Zombie : MonoBehaviour
 {
-    private int currentHealth = 100;
+    public int maxHealth = 100;
     public Animator animator;
     public Slider healthBar; // 👈 Bu satır Health Bar alanını Inspector’a ekler!
+    public int currentHealth;
 
-    void Update()
+    public void Start()
     {
+        currentHealth = maxHealth;
+
         if (healthBar != null)
-            healthBar.value = currentHealth;
+            healthBar.maxValue = maxHealth;
     }
 
     public void TakeDamage(int damageAmount)
     {
         currentHealth -= damageAmount;
 
+        if (healthBar != null)
+            healthBar.value = currentHealth;
+
         if (currentHealth <= 0) 
         {
             animator.SetTrigger("die");
-            Destroy(gameObject, 5f); // 5 saniye sonra yok zombiyi yok eder
+            Destroy(gameObject, 3f); // 3 saniye sonra yok zombiyi yok eder
         }
         else
         {
