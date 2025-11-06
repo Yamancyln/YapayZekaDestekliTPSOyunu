@@ -1,14 +1,12 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class PauseMenu : MonoBehaviour
 {
     [Header("UI References")]
     public GameObject pauseMenuUI;       // Panel veya Canvas referansı
-    public GameObject resumeButton;
-    public Button ResumeButton;
-    public static bool GameIsPaused = false; 
+
+    public static bool GameIsPaused = false; // ⬅️ Global flag (her yerden erişilir)
 
     void Awake()
     {
@@ -69,19 +67,4 @@ public class PauseMenu : MonoBehaviour
     #endif
     }
 
-    // chatGPT yardımı alındı
-    public void GameOverState()
-    {
-        pauseMenuUI.SetActive(true);
-        Time.timeScale = 2f;
-        GameIsPaused = true;
-
-        if (resumeButton != null) 
-            resumeButton.SetActive(false);
-        ResumeButton.interactable = false;
-        ResumeButton.gameObject.SetActive(false);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;        
-    }
 }
