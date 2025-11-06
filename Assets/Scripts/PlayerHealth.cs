@@ -9,6 +9,16 @@ public class PlayerHealth : MonoBehaviour
     public Animator animator;
     public Slider healthBar;
 
+    void Start()
+    {
+        currentHealth = maxHealth;
+        if (healthBar != null)
+        {
+            healthBar.maxValue = maxHealth;
+            healthBar.value = currentHealth;
+        }
+    }
+
     void Update()
     {
         if (healthBar != null)
@@ -17,15 +27,19 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int damageAmount)
     {
+        if (isDead) return;
+
         currentHealth -= damageAmount;
 
         if (currentHealth <= 0)
         {
-            animator.SetTrigger("Player Öldü!");
+            currentHealth = 0;
+            isDead = true;
+            animator.SetTrigger("Die");
         }
         else
         {
-            animator.SetTrigger("Player damage");
+            animator.SetTrigger("Damage");
         }
     }
 }

@@ -4,18 +4,36 @@ using UnityEngine;
 public class AttackState : StateMachineBehaviour
 {
     Transform player;
+    private PlayerHealth playerHealth;
+    private float attackCooldown = 1.5f; // zombi başına saldırı süresi
+    private float nextAttackTime = 0f;
+    private int damagePerHit = 10;
 
     //OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        playerHealth = player?.GetComponent<PlayerHealth>();
+        nextAttackTime = Time.time;
     }
 
     //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        if (player == null || playerHealth == null)
+            return;
+
+        float distance = Vector3.Distance(player.position, animator.transform.position);        
         animator.transform.LookAt(player);
-        float distance = Vector3.Distance(player.position, animator.transform.position);
+        if (distance < 2)
+        {
+            // Belirli aralıklarla saldırı yapar
+            if (Time.time >= nextAttackTime)
+            {
+                playerHealth.TakeDamage(damagePerHit);
+                nextAttackTime = Time.time + attackCooldown;
+            }
+        }
         if (distance > 3)
             animator.SetBool("isAttacking", false);
     }
