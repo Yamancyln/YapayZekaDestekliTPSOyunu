@@ -5,9 +5,9 @@ public class AttackState : StateMachineBehaviour
 {
     Transform player;
     private PlayerHealth playerHealth;
-    private float attackCooldown = 1.5f; // zombi başına saldırı süresi
-    private float nextAttackTime = 0f;
-    private int damagePerHit = 10;
+    private float attackCooldown = 1.5f; // zombi başına saldırı süresi //chatgpt yardımı alındı
+    private float nextAttackTime = 0f;  //chatgpt yardımı alındı
+    private int damagePerHit = 10;  // bir zombinin saldırı başına verdiği hasar. 
 
     //OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -20,21 +20,18 @@ public class AttackState : StateMachineBehaviour
     //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if (player == null || playerHealth == null)
-            return;
-
         float distance = Vector3.Distance(player.position, animator.transform.position);        
         animator.transform.LookAt(player);
-        if (distance < 2)
+        if (distance < 1.5f)
         {
-            // Belirli aralıklarla saldırı yapar
+            // Belirli aralıklarla saldırı yapar  //Bu kısım chatgpt yardımı ile yapıldı.
             if (Time.time >= nextAttackTime)
             {
                 playerHealth.TakeDamage(damagePerHit);
                 nextAttackTime = Time.time + attackCooldown;
             }
         }
-        if (distance > 3)
+        if (distance > 2)
             animator.SetBool("isAttacking", false);
     }
 
