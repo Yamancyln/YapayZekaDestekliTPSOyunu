@@ -420,9 +420,6 @@ PrefabInstance:
       addedObject: {fileID: 92825279}
     - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 92825284}
-    - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 92825283}
     - targetCorrespondingSourceObject: {fileID: 7309485774519016552, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
@@ -525,19 +522,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4698152120088058464, guid: c300314c630c70e43a12fa681cdda887, type: 3}
---- !u!114 &92825284
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 92825275}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cam: {fileID: 2140555706}
 --- !u!1 &107533575
 GameObject:
   m_ObjectHideFlags: 0
@@ -550,6 +534,7 @@ GameObject:
   - component: {fileID: 107533579}
   - component: {fileID: 107533578}
   - component: {fileID: 107533577}
+  - component: {fileID: 107533580}
   m_Layer: 5
   m_Name: CanvasPlayer
   m_TagString: Untagged
@@ -640,6 +625,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &107533580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 107533575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 2140555706}
 --- !u!1 &122981541
 GameObject:
   m_ObjectHideFlags: 0
@@ -1014,6 +1012,7 @@ GameObject:
   - component: {fileID: 291080915}
   - component: {fileID: 291080914}
   - component: {fileID: 291080913}
+  - component: {fileID: 291080916}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1104,6 +1103,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &291080916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 291080911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 2140555706}
 --- !u!1 &300135655 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7309485774519016552, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
@@ -1661,9 +1673,6 @@ PrefabInstance:
       addedObject: {fileID: 582711089}
     - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 582711094}
-    - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 582711093}
     - targetCorrespondingSourceObject: {fileID: 7309485774519016552, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
@@ -1766,19 +1775,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4698152120088058464, guid: c300314c630c70e43a12fa681cdda887, type: 3}
---- !u!114 &582711094
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 582711085}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cam: {fileID: 2140555706}
 --- !u!1 &603151672 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7309485774519016552, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
@@ -1979,6 +1975,7 @@ GameObject:
   - component: {fileID: 681116493}
   - component: {fileID: 681116492}
   - component: {fileID: 681116491}
+  - component: {fileID: 681116494}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -2069,6 +2066,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &681116494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 681116489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 2140555706}
 --- !u!1 &710839010
 GameObject:
   m_ObjectHideFlags: 0
@@ -2207,7 +2217,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pauseMenuUI: {fileID: 278276811}
   resumeButton: {fileID: 0}
-  ResumeButton: {fileID: 0}
 --- !u!114 &803906159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3053,9 +3062,6 @@ PrefabInstance:
       addedObject: {fileID: 897431589}
     - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 897431594}
-    - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 897431593}
     - targetCorrespondingSourceObject: {fileID: 7309485774519016552, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
@@ -3158,19 +3164,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4698152120088058464, guid: c300314c630c70e43a12fa681cdda887, type: 3}
---- !u!114 &897431594
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 897431585}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cam: {fileID: 2140555706}
 --- !u!1 &952737530
 GameObject:
   m_ObjectHideFlags: 0
@@ -3303,6 +3296,7 @@ GameObject:
   - component: {fileID: 981839682}
   - component: {fileID: 981839681}
   - component: {fileID: 981839680}
+  - component: {fileID: 981839683}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -3393,6 +3387,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &981839683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981839678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 2140555706}
 --- !u!1 &984615857
 GameObject:
   m_ObjectHideFlags: 0
@@ -4069,15 +4076,15 @@ PrefabInstance:
       objectReference: {fileID: 8338988565591873055}
     - target: {fileID: 4981597930953848460, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: CameraSide
-      value: 0.6695781
+      value: 0.6695793
       objectReference: {fileID: 0}
     - target: {fileID: 4981597930953848460, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: CameraDistance
-      value: 2.538957
+      value: 2.538952
       objectReference: {fileID: 0}
     - target: {fileID: 4981597930953848460, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: VerticalArmLength
-      value: 0.09276361
+      value: 0.09276376
       objectReference: {fileID: 0}
     - target: {fileID: 6859467321477424917, guid: a1a802ecaf6775746bb2a929fb554ad8, type: 3}
       propertyPath: Priority.Enabled
@@ -5037,19 +5044,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4698152120088058464, guid: c300314c630c70e43a12fa681cdda887, type: 3}
---- !u!114 &1748062549
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1748062539}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cam: {fileID: 2140555706}
 --- !u!1 &1751807727
 GameObject:
   m_ObjectHideFlags: 0
@@ -5216,6 +5210,7 @@ GameObject:
   - component: {fileID: 1797473594}
   - component: {fileID: 1797473593}
   - component: {fileID: 1797473592}
+  - component: {fileID: 1797473595}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -5306,6 +5301,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &1797473595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797473590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa21eac20b66c0b499ffea59435e4b8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 2140555706}
 --- !u!1001 &1821176112
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5397,9 +5405,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1748062547}
-    - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1748062549}
     - targetCorrespondingSourceObject: {fileID: 4803014352389650695, guid: 06cb2b131fe009c47a523671a8fa9ed8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1748062548}

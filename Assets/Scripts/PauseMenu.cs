@@ -6,9 +6,9 @@ public class PauseMenu : MonoBehaviour
 {
     [Header("UI References")]
     public GameObject pauseMenuUI;       // Panel veya Canvas referansı
-    public GameObject resumeButton;
-    public Button ResumeButton;
-    public static bool GameIsPaused = false; 
+    public Button resumeButton;
+    public static bool GameIsPaused = false; // Global flag (ThirdPersonController scriptinden erişilir)
+    private bool isGameOver = false;
 
     void Awake()
     {
@@ -19,6 +19,8 @@ public class PauseMenu : MonoBehaviour
 
     void Update()
     {
+        if (isGameOver) return;
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (GameIsPaused)
@@ -32,7 +34,7 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
-        GameIsPaused = false;            // 🔹 Flag false
+        GameIsPaused = false;            
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -41,7 +43,7 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
-        GameIsPaused = true;             // 🔹 Flag true
+        GameIsPaused = true;            
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -53,11 +55,11 @@ public class PauseMenu : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    public void GoToMainMenu()
-    {
-    Time.timeScale = 1f; // oyunu normale döndür
-    UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-    }
+    //public void GoToMainMenu()
+    //{
+    //Time.timeScale = 1f; // oyunu normale döndür
+    //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    //}
 
     public void QuitGame()
     {
@@ -72,14 +74,15 @@ public class PauseMenu : MonoBehaviour
     // chatGPT yardımı alındı
     public void GameOverState()
     {
-        pauseMenuUI.SetActive(true);
+        isGameOver = true;
         Time.timeScale = 2f;
-        GameIsPaused = true;
+        pauseMenuUI.SetActive(true);
 
         if (resumeButton != null) 
-            resumeButton.SetActive(false);
-        ResumeButton.interactable = false;
-        ResumeButton.gameObject.SetActive(false);
+        {
+            resumeButton.interactable = false;
+            resumeButton.gameObject.SetActive(false);
+        }            
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;        

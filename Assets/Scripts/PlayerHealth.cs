@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,11 +40,17 @@ public class PlayerHealth : MonoBehaviour
             animator.SetTrigger("Die");
             
             FindObjectOfType<PauseMenu>().GameOverState(); // PauseMenu scriptindeki sınıfı içerisinde GameOverState() fonksiyonunu bulur ve aktif eder.
-            Destroy(gameObject, 5f); // 5 saniye sonra oyuncuyu sahneden sil
+            StartCoroutine(RemoveAfterDelay());
         }
         else
         {
             animator.SetTrigger("Damage");
         }
+    }
+
+    private IEnumerator RemoveAfterDelay()
+    {
+        yield return new WaitForSeconds(4.5f);
+        Destroy(gameObject);
     }
 }

@@ -179,10 +179,8 @@ namespace StarterAssets
 
         private void Update()
         {
-            if (PauseMenu.GameIsPaused)
-    return;
-
-
+            if (PauseMenu.GameIsPaused) 
+                return;
 
             _hasAnimator = TryGetComponent(out _animator);
 
@@ -201,7 +199,7 @@ namespace StarterAssets
         private void LateUpdate()
         {
             if (PauseMenu.GameIsPaused)
-    return;
+                return;
 
             CameraRotation();
         }
