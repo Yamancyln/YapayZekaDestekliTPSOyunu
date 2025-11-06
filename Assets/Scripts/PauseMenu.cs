@@ -75,7 +75,7 @@ public class PauseMenu : MonoBehaviour
     public void GameOverState()
     {
         isGameOver = true;
-        Time.timeScale = 2f;
+        Time.timeScale = 4f;
         pauseMenuUI.SetActive(true);
 
         if (resumeButton != null) 
