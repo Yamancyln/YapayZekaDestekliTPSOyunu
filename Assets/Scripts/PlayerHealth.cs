@@ -36,6 +36,9 @@ public class PlayerHealth : MonoBehaviour
             currentHealth = 0;
             isDead = true;
             animator.SetTrigger("Die");
+            
+            FindObjectOfType<PauseMenu>().GameOverState(); // PauseMenu scriptindeki sınıfı içerisinde GameOverState() fonksiyonunu bulur ve aktif eder.
+            Destroy(gameObject, 5f); // 5 saniye sonra oyuncuyu sahneden sil
         }
         else
         {
