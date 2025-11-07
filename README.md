@@ -89,7 +89,7 @@ Bu projeyle birlikte:
 1. Unity 2022.3.17f1 LTS kurulu olmalıdır.
 2. Reponun klonlanması:
    ```bash
-   git clone https://github.com/kullaniciAdi/YapayZekaDestekliTPSOyunu.git
+   git clone https://github.com/Yamancyln/YapayZekaDestekliTPSOyunu.git
    ```
 3. Unity Hub ile proje açılmalıdır.
 
