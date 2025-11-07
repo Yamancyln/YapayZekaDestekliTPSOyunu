@@ -8,6 +8,7 @@ TagManager:
   - WayPoints
   - Zombie
   - ZombieHead
+  - Enemy
   layers:
   - Default
   - TransparentFX
