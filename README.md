@@ -6,7 +6,7 @@
 
 ## 💻 Platform
 
-- Unity 2022.3.17f1 LTS (URP tabanlı 3D proje)
+- Unity 6000.0.60f1 LTS (URP tabanlı 3D proje)
 - Hedef platform: PC (Windows)
 
 ## 👥 Takım Üyeleri ve Katkı Alanları
@@ -99,7 +99,7 @@ Bu projeyle birlikte:
 
 ## 🔧 Kurulum
 
-1. Unity 2022.3.17f1 LTS kurulu olmalıdır.
+1. Unity 6000.0.60f1 LTS kurulu olmalıdır.
 2. Reponun klonlanması:
    ```bash
    git clone https://github.com/Yamancyln/YapayZekaDestekliTPSOyunu.git
@@ -107,7 +107,7 @@ Bu projeyle birlikte:
 3. Unity Hub ile proje açılmalıdır.
 
 ## ✍️ Lisans
-Bu proje eğitim amaçlı geliştirilmiştir. Tüm haklar proje ekibine aittir.
+Bu proje eğitim ve proje ödevi amaçlı geliştirilmiştir. Tüm haklar proje ekibine aittir.
 
 ---
 
