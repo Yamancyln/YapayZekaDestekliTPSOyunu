@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class SafeZone : MonoBehaviour
 {
-    [Header("Win Panel")]
     public GameObject winPanel;
 
     private void OnTriggerEnter(Collider other)
@@ -10,18 +9,17 @@ public class SafeZone : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             Debug.Log("Safe zone reached!");
-            if (winPanel != null)
-            {
-                winPanel.SetActive(true);
-            }
-            else
-            {
-                Debug.LogWarning("WinPanel atanmamış!");
-            }
+            winPanel.SetActive(true);
 
-            Time.timeScale = 0f; // oyunu durdur
+            // Oyunu durdur
+            Time.timeScale = 0f;
+
+            // Farenin görünür ve serbest olmasını sağla
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
+            // (Opsiyonel) Oyuncunun hareket scriptini devre dışı bırak
+            // other.GetComponent<PlayerMovement>().enabled = false;
         }
     }
 }
-
-
