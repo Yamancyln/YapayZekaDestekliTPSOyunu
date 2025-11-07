@@ -1,0 +1,1414 @@
+//ThirdPersonController.cs//
+
+ using UnityEngine;
+#if ENABLE_INPUT_SYSTEM 
+using UnityEngine.InputSystem;
+#endif
+
+/* Note: animations are called via the controller for both the character and capsule using animator null checks
+ */
+
+namespace StarterAssets
+{
+    [RequireComponent(typeof(CharacterController))]
+#if ENABLE_INPUT_SYSTEM 
+    [RequireComponent(typeof(PlayerInput))]
+#endif
+    public class ThirdPersonController : MonoBehaviour
+    {
+
+        [Header("Player")]
+        [Tooltip("Move speed of the character in m/s")] //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı.                                                        
+        public float StrafeSpeed = 0.4f;                //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
+
+        [Tooltip("Crouch speed of the character in m/s")] //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+        public float CrouchSpeed = 1.0f;                  //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+
+        [Tooltip("Move speed of the character in m/s")]
+        public float MoveSpeed = 2.5f;
+
+        [Tooltip("Sprint speed of the character in m/s")]
+        public float SprintSpeed = 5.335f;
+
+        [Tooltip("Player mouse look sensitivity")] // Game World Enginering Youtube kanalında "Setting Up Unity's Third Person Controller Starter Asset | Unity 6 URP" videosundan alındı
+        public Vector2 lookSensitivity = new Vector2(1, 1);   // https://www.youtube.com/watch?v=EmmrECfgHHM
+
+        [Tooltip("How fast the character turns to face movement direction")]
+        [Range(0.0f, 0.3f)]
+        public float RotationSmoothTime = 0.12f;
+
+        [Tooltip("Acceleration and deceleration")]
+        public float SpeedChangeRate = 10.0f;
+
+        public AudioClip LandingAudioClip;
+        public AudioClip[] FootstepAudioClips;
+        [Range(0, 1)] public float FootstepAudioVolume = 0.5f;
+
+        [Space(10)]
+        [Tooltip("The height the player can jump")]
+        public float JumpHeight = 1.2f;
+
+        [Tooltip("The character uses its own gravity value. The engine default is -9.81f")]
+        public float Gravity = -15.0f;
+
+        [Space(10)]
+        [Tooltip("Time required to pass before being able to jump again. Set to 0f to instantly jump again")]
+        public float JumpTimeout = 0.50f;
+
+        [Tooltip("Time required to pass before entering the fall state. Useful for walking down stairs")]
+        public float FallTimeout = 0.15f;
+
+        [Header("Player Grounded")]
+        [Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
+        public bool Grounded = true;
+
+        [Tooltip("Useful for rough ground")]
+        public float GroundedOffset = -0.14f;
+
+        [Tooltip("The radius of the grounded check. Should match the radius of the CharacterController")]
+        public float GroundedRadius = 0.28f;
+
+        [Tooltip("What layers the character uses as ground")]
+        public LayerMask GroundLayers;
+
+        [Header("Cinemachine")]
+        [Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
+        public GameObject CinemachineCameraTarget;
+
+        [Tooltip("How far in degrees can you move the camera up")]
+        public float TopClamp = 70.0f;
+
+        [Tooltip("How far in degrees can you move the camera down")]
+        public float BottomClamp = -30.0f;
+
+        [Tooltip("Additional degress to override the camera. Useful for fine tuning camera position when locked")]
+        public float CameraAngleOverride = 0.0f;
+
+        [Tooltip("For locking the camera position on all axis")]
+        public bool LockCameraPosition = false;
+
+        // cinemachine
+        private float _cinemachineTargetYaw;
+        private float _cinemachineTargetPitch;
+
+        // player
+        public bool Strafe; //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı. //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
+        private float _speed;
+        private float _animationBlend;
+        private float _targetRotation = 0.0f;
+        private float _rotationVelocity;
+        private float _verticalVelocity;
+        private float _terminalVelocity = 53.0f;
+
+        //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+        //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+        [Header("Crouching")]
+        [SerializeField] private float crouchHeight = 1.2f;
+        [SerializeField] private Vector3 crouchCenter = new Vector3(0, 0.595f, 0);
+        [SerializeField] private float crouchTransitionSpeed = 7f;
+        private float standHeight;
+        private Vector3 standCenter;
+        private bool crouched;
+
+        // timeout deltatime
+        private float _jumpTimeoutDelta;
+        private float _fallTimeoutDelta;
+
+        // animation IDs
+        private int _animIDSpeed;
+        private int _animIDGrounded;
+        private int _animIDJump;
+        private int _animIDFreeFall;
+        private int _animIDMotionSpeed;
+
+#if ENABLE_INPUT_SYSTEM 
+        private PlayerInput _playerInput;
+#endif
+        private Animator _animator;
+        private CharacterController _controller;
+        private StarterAssetsInputs _input;
+        private GameObject _mainCamera;
+
+        private const float _threshold = 0.01f;
+
+        private bool _hasAnimator;
+
+        private bool IsCurrentDeviceMouse
+        {
+            get
+            {
+#if ENABLE_INPUT_SYSTEM
+                return _playerInput.currentControlScheme == "KeyboardMouse";
+#else
+				return false;
+#endif
+            }
+        }
+
+
+        private void Awake()
+        {
+            // get a reference to our main camera
+            if (_mainCamera == null)
+            {
+                _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+            }
+        }
+
+        private void Start()
+        {
+            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            
+            _hasAnimator = TryGetComponent(out _animator);
+            _controller = GetComponent<CharacterController>();
+            _input = GetComponent<StarterAssetsInputs>();
+#if ENABLE_INPUT_SYSTEM 
+            _playerInput = GetComponent<PlayerInput>();
+#else
+			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
+#endif
+
+            AssignAnimationIDs();
+
+            // reset our timeouts on start
+            _jumpTimeoutDelta = JumpTimeout;
+            _fallTimeoutDelta = FallTimeout;
+
+            //CROUCH VALUES
+            standCenter = _controller.center; //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            standHeight = _controller.height; //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+        }
+
+        private void Update()
+        {
+            if (PauseMenu.GameIsPaused) 
+                return;
+
+            _hasAnimator = TryGetComponent(out _animator);
+
+            JumpAndGravity();
+            GroundedCheck();
+            Move();
+            UpdateControllerCollider();
+
+            if (_input.crouch) //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            {                              //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+                crouched = !crouched;
+                _input.crouch = false;
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (PauseMenu.GameIsPaused)
+                return;
+
+            CameraRotation();
+        }
+
+        private void AssignAnimationIDs()
+        {
+            _animIDSpeed = Animator.StringToHash("Speed");
+            _animIDGrounded = Animator.StringToHash("Grounded");
+            _animIDJump = Animator.StringToHash("Jump");
+            _animIDFreeFall = Animator.StringToHash("FreeFall");
+            _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+        }
+
+        private void GroundedCheck()
+        {
+            // set sphere position, with offset
+            Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
+                transform.position.z);
+            Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
+                QueryTriggerInteraction.Ignore);
+
+            // update animator if using character
+            if (_hasAnimator)
+            {
+                _animator.SetBool(_animIDGrounded, Grounded);
+            }
+        }
+
+        private void CameraRotation()
+        {
+            // if there is an input and camera position is not fixed
+            if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
+            {
+                //Don't multiply mouse input by Time.deltaTime;
+                float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+
+                //Mouse hareketi ile dinamik kamera bakışı
+                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier * lookSensitivity.x; // Game World Enginering Youtube kanalında "Setting Up Unity's Third Person Controller Starter Asset | Unity 6 URP" videosundan alındı
+                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier * lookSensitivity.y; // https://www.youtube.com/watch?v=EmmrECfgHHM
+            }
+
+            // clamp our rotations so our values are limited 360 degrees
+            _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
+            _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+
+            // Cinemachine will follow this target
+            CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
+                _cinemachineTargetYaw, 0.0f);
+        }
+
+        private void Move()
+        {
+            // hareket hızı, sprint hızı ve sprint tuşuna ve crouch tuşuna(ctrl) basılıp basılmadığına göre hedef hızı ayarlama
+            //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+            float targetSpeed = _input.sprint ? SprintSpeed : crouched ? CrouchSpeed : MoveSpeed;
+
+            if (_input.sprint)   //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+                crouched = false;  //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+
+            // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
+
+            // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
+            // if there is no input, set the target speed to 0
+            if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+
+            // a reference to the players current horizontal velocity
+            float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
+
+            float speedOffset = 0.1f;
+            float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+
+            // accelerate or decelerate to target speed
+            if (currentHorizontalSpeed < targetSpeed - speedOffset ||
+                currentHorizontalSpeed > targetSpeed + speedOffset)
+            {
+                // creates curved result rather than a linear one giving a more organic speed change
+                // note T in Lerp is clamped, so we don't need to clamp our speed
+                _speed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed * inputMagnitude,
+                    Time.deltaTime * SpeedChangeRate);
+
+                // round speed to 3 decimal places
+                _speed = Mathf.Round(_speed * 1000f) / 1000f;
+            }
+            else
+            {
+                _speed = targetSpeed;
+            }
+
+            _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
+            if (_animationBlend < 0.01f) _animationBlend = 0f;
+
+            // normalise input direction
+            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+
+            // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
+            // if there is a move input rotate player when the player is moving
+            if (_input.move != Vector2.zero)
+            {
+                _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
+                                  _mainCamera.transform.eulerAngles.y;
+            }
+
+            if (Strafe)     //Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan alındı.
+            {               //https://www.youtube.com/watch?v=oYsSNxcjyhY&list=PL-ChqfOAT7ZhDcbg68v5EcaciArBunu0s 
+                targetSpeed = StrafeSpeed;
+
+                _targetRotation = _cinemachineTargetYaw; //Kameranın hedef yönünde bakması için 
+                transform.rotation = Quaternion.Euler(0, _targetRotation, 0);
+
+                targetDirection = transform.forward * inputDirection.z + transform.right * inputDirection.x;
+
+                float currentX = _animator.GetFloat("X");
+                float currentY = _animator.GetFloat("Y");
+
+                _animator.SetFloat("X", Mathf.Lerp(currentX, inputDirection.x, SpeedChangeRate * Time.deltaTime));
+                _animator.SetFloat("Y", Mathf.Lerp(currentY, inputDirection.z, SpeedChangeRate * Time.deltaTime));
+            }
+            else
+            {
+                float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
+                    RotationSmoothTime);
+
+                // rotate to face input direction relative to camera position
+                transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            }
+
+            // move the player
+            _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
+                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+
+            //Karakter kullanılıyorsa animatörü güncelleme
+            //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.
+            //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+            if (_hasAnimator)
+            {
+                _animator.SetFloat(_animIDSpeed, _animationBlend);
+                _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+                _animator.SetBool("Crouched", crouched);
+            }
+        }
+
+        private void UpdateControllerCollider() //Youtube "Thunder Dev" adlı kanalın "How to Add Crouching in Unity 6 | Third-Person Controller Tutorial" isimli videosundan alındı.                                              
+        {                                       //https://www.youtube.com/watch?v=7ZDTBkaUTlw
+            Vector3 targetCenter = standCenter;
+            float targetHeight = standHeight;
+
+            if (crouched)
+            {
+                targetCenter = crouchCenter;
+                targetHeight = crouchHeight;
+            }
+
+            _controller.height = Mathf.Lerp(_controller.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
+            _controller.center = Vector3.Lerp(_controller.center, targetCenter, crouchTransitionSpeed * Time.deltaTime);
+        }
+
+        private void JumpAndGravity()
+        {
+            if (Grounded)
+            {
+                // reset the fall timeout timer
+                _fallTimeoutDelta = FallTimeout;
+
+                // update animator if using character
+                if (_hasAnimator)
+                {
+                    _animator.SetBool(_animIDJump, false);
+                    _animator.SetBool(_animIDFreeFall, false);
+                }
+
+                // stop our velocity dropping infinitely when grounded
+                if (_verticalVelocity < 0.0f)
+                {
+                    _verticalVelocity = -2f;
+                }
+
+                // Jump
+                if (_input.jump && _jumpTimeoutDelta <= 0.0f && !_animator.IsInTransition(0))
+                {
+                    _input.jump = false;
+
+                    if (!crouched)
+                    {
+                        // the square root of H * -2 * G = how much velocity needed to reach desired height
+                        _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+
+                        // update animator if using character
+                        if (_hasAnimator)
+                        {
+                            _animator.SetBool(_animIDJump, true);
+                        }
+                    }
+                    else if (crouched)
+                    {
+                        crouched = false;
+                    }
+                }
+
+                // jump timeout
+                if (_jumpTimeoutDelta >= 0.0f)
+                {
+                    _jumpTimeoutDelta -= Time.deltaTime;
+                }
+            }
+            else
+            {
+                // reset the jump timeout timer
+                _jumpTimeoutDelta = JumpTimeout;
+
+                // fall timeout
+                if (_fallTimeoutDelta >= 0.0f)
+                {
+                    _fallTimeoutDelta -= Time.deltaTime;
+                }
+                else
+                {
+                    // update animator if using character
+                    if (_hasAnimator)
+                    {
+                        _animator.SetBool(_animIDFreeFall, true);
+                    }
+                }
+
+                // if we are not grounded, do not jump
+                _input.jump = false;
+            }
+
+            // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
+            if (_verticalVelocity < _terminalVelocity)
+            {
+                _verticalVelocity += Gravity * Time.deltaTime;
+            }
+        }
+
+        private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+        {
+            if (lfAngle < -360f) lfAngle += 360f;
+            if (lfAngle > 360f) lfAngle -= 360f;
+            return Mathf.Clamp(lfAngle, lfMin, lfMax);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
+            Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
+
+            if (Grounded) Gizmos.color = transparentGreen;
+            else Gizmos.color = transparentRed;
+
+            // when selected, draw a gizmo in the position of, and matching radius of, the grounded collider
+            Gizmos.DrawSphere(
+                new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z),
+                GroundedRadius);
+        }
+
+        private void OnFootstep(AnimationEvent animationEvent)
+        {
+            if (animationEvent.animatorClipInfo.weight > 0.5f)
+            {
+                if (FootstepAudioClips.Length > 0)
+                {
+                    var index = Random.Range(0, FootstepAudioClips.Length);
+                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                }
+            }
+        }
+
+        private void OnLand(AnimationEvent animationEvent)
+        {
+            if (animationEvent.animatorClipInfo.weight > 0.5f)
+            {
+                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
+            }
+        }
+    }
+}
+
+
+//StarterAssetsInputs.cs// 
+
+using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
+
+namespace StarterAssets
+{
+	public class StarterAssetsInputs : MonoBehaviour
+	{
+		[Header("Character Input Values")]
+		public Vector2 move;
+		public Vector2 look;
+		public bool jump;
+		public bool sprint;
+		public bool aim;
+		public bool fire;
+		public bool crouch;
+
+		[Header("Movement Settings")]
+		public bool analogMovement;
+
+		[Header("Mouse Cursor Settings")]
+		public bool cursorLocked = true;
+		public bool cursorInputForLook = true;
+
+#if ENABLE_INPUT_SYSTEM
+		public void OnMove(InputValue value)
+		{
+			MoveInput(value.Get<Vector2>());
+		}
+
+		public void OnLook(InputValue value)
+		{
+			if(cursorInputForLook)
+			{
+				LookInput(value.Get<Vector2>());
+			}
+		}
+
+		public void OnJump(InputValue value)
+		{
+			JumpInput(value.isPressed);
+		}
+
+		public void OnSprint(InputValue value)
+		{
+			SprintInput(value.isPressed);
+		}
+
+		public void OnAim(InputValue value)
+		{
+			AimInput(value.isPressed);
+		}
+		public void OnFire(InputValue value)
+		{
+			FireInput(value.isPressed);
+		}
+		public void OnCrouch(InputValue value)
+		{
+			CrouchInput(value.isPressed);
+		}
+#endif
+
+
+		public void MoveInput(Vector2 newMoveDirection)
+		{
+			move = newMoveDirection;
+		} 
+
+		public void LookInput(Vector2 newLookDirection)
+		{
+			look = newLookDirection;
+		}
+
+		public void JumpInput(bool newJumpState)
+		{
+			jump = newJumpState;
+		}
+
+		public void SprintInput(bool newSprintState)
+		{
+			sprint = newSprintState;
+		}
+		public void AimInput(bool newAimState)
+		{
+			aim = newAimState;
+		}
+		public void FireInput(bool newFireState)
+		{
+			fire = newFireState;
+		}
+		public void CrouchInput(bool newCrouchState)
+		{
+			crouch = newCrouchState;
+		}
+
+		private void OnApplicationFocus(bool hasFocus)
+		{
+			SetCursorState(cursorLocked);
+		}
+
+		private void SetCursorState(bool newState)
+		{
+			Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
+		}
+	}
+	
+}
+
+
+//TwoHandIK.cs//
+
+using UnityEngine;
+
+public class TwoHandIK : MonoBehaviour
+{
+    public Animator animator;
+    public Transform leftHandTarget;
+
+    void OnAnimatorIK(int layerIndex)
+    {
+        if (leftHandTarget == null) return;
+
+        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
+        animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandTarget.position);
+        animator.SetIKRotation(AvatarIKGoal.LeftHand, leftHandTarget.rotation);
+    }
+}
+
+
+//SettingsMenu.cs//
+
+using UnityEngine;
+using UnityEngine.UI;
+
+public class SettingsMenu : MonoBehaviour
+{
+    [Header("UI References")]
+    public GameObject settingsPanel;
+    public GameObject mainMenuPanel;
+    public Toggle soundToggle;
+
+    private void Start()
+    {
+        // Oyun başladığında Settings Panel kapalı olsun
+        settingsPanel.SetActive(false);
+    }
+
+    public void OpenSettings()
+    {
+        settingsPanel.SetActive(true);
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(false);
+    }
+
+    public void CloseSettings()
+    {
+        settingsPanel.SetActive(false);
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(true);
+    }
+
+    public void ToggleSound()
+    {
+        Debug.Log("Sound: " + soundToggle.isOn);
+        // Buraya ileride ses sistemini bağlayabilirsin
+        // Örn: AudioListener.volume = soundToggle.isOn ? 1 : 0;
+    }
+}
+
+
+//MainMenu.cs//
+
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class MainMenu : MonoBehaviour
+{
+    public string gameSceneName;
+
+    public void PlayGame()
+    {
+        SceneManager.LoadScene(gameSceneName);
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+        Debug.Log("Game Closed!");
+    }
+}
+
+
+//IdleState.cs//
+
+using UnityEngine;
+
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E01): STATE MACHINE BEHAVIORS" adlı videodan yardım alınmıştır.
+public class IdleState : StateMachineBehaviour
+{
+    float timer;
+    Transform player;
+    float chaseRange = 7f;
+    // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        timer = 0;
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+    }
+
+    //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+    override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        timer += Time.deltaTime;
+        if (timer > 2)
+            animator.SetBool("isPatrolling", true);
+
+        float distance = Vector3.Distance(player.position, animator.transform.position);
+        if (distance < chaseRange)
+            animator.SetBool("isChasing", true);
+    }
+
+    //OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+    override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+
+    }
+
+    //OnStateMove is called right after Animator.OnAnimatorMove()
+    override public void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that processes and affects root motion
+    }
+
+    //OnStateIK is called right after Animator.OnAnimatorIK()
+    override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that sets up animation IK (inverse kinematics)
+    }
+}
+
+
+//PatrolState.cs//
+
+using UnityEngine;
+using UnityEngine.AI;
+using System.Collections.Generic;
+
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E01): STATE MACHINE BEHAVIORS" adlı videodan yardım alınmıştır.
+public class PatrolState : StateMachineBehaviour
+{
+    float timer;
+    List<Transform> wayPoints = new List<Transform>();
+    NavMeshAgent agent;
+    Transform player;
+    float chaseRange = 7f;
+
+    // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        agent = animator.GetComponent<NavMeshAgent>();
+        agent.speed = 1.5f;
+        timer = 0;
+        GameObject go = GameObject.FindGameObjectWithTag("WayPoints");
+        foreach (Transform t in go.transform)
+        {
+            wayPoints.Add(t);
+        }
+
+        agent.SetDestination(wayPoints[Random.Range(0, wayPoints.Count)].position);
+    }
+
+    // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+    override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        if(agent.remainingDistance<=agent.stoppingDistance)
+            agent.SetDestination(wayPoints[Random.Range(0, wayPoints.Count)].position);
+
+        timer += Time.deltaTime;
+        if (timer > 10)
+            animator.SetBool("isPatrolling", false);
+
+        float distance = Vector3.Distance(player.position, animator.transform.position);
+        if (distance < chaseRange)
+            animator.SetBool("isChasing", true);
+    }
+
+    // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+    override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        agent.SetDestination(agent.transform.position);
+    }
+
+    //OnStateMove is called right after Animator.OnAnimatorMove()
+    override public void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that processes and affects root motion
+    }
+
+    // OnStateIK is called right after Animator.OnAnimatorIK()
+    override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that sets up animation IK (inverse kinematics)
+    }
+}
+
+
+//LookAtPlayer.cs//
+
+using UnityEngine;
+
+public class LookAtPlayer : MonoBehaviour
+{
+    public Transform cam;
+    void LateUpdate()
+    {
+        transform.LookAt(cam);
+    }
+}
+
+
+//ChaseState.cs//
+
+using UnityEngine;
+using UnityEngine.AI;
+
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E02): CHASE AND ATTACK" adlı videodan yardım alınmıştır.
+public class ChaseState : StateMachineBehaviour
+{
+    NavMeshAgent agent;
+    Transform player;
+
+    // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        agent = animator.GetComponent<NavMeshAgent>();
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        agent.speed = 3.5f;
+    }
+
+    // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+    override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        agent.SetDestination(player.position);
+        float distance = Vector3.Distance(player.position, animator.transform.position);
+        if (distance > 15)
+            animator.SetBool("isChasing", false);
+        if (distance < 1.5)
+            animator.SetBool("isAttacking", true);
+    }
+
+    // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+    override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        agent.SetDestination(animator.transform.position);
+    }
+
+    // OnStateMove is called right after Animator.OnAnimatorMove()
+    override public void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that processes and affects root motion
+    }
+
+    // OnStateIK is called right after Animator.OnAnimatorIK()
+    override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that sets up animation IK (inverse kinematics)
+    }
+}
+
+
+//AttackState.cs//
+
+using UnityEngine;
+
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E02): CHASE AND ATTACK" adlı videodan yardım alınmıştır.
+public class AttackState : StateMachineBehaviour
+{
+    Transform player;
+    private PlayerHealth playerHealth;
+    private float attackCooldown = 1.5f; // zombi başına saldırı süresi //chatgpt yardımı alındı
+    private float nextAttackTime = 0f;  //chatgpt yardımı alındı
+    private int damagePerHit = 10;  // bir zombinin saldırı başına verdiği hasar. 
+
+    //OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        playerHealth = player?.GetComponent<PlayerHealth>();
+        nextAttackTime = Time.time;
+    }
+
+    //OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+    override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        float distance = Vector3.Distance(player.position, animator.transform.position);        
+        animator.transform.LookAt(player);
+        if (distance < 1.5f)
+        {
+            // Belirli aralıklarla saldırı yapar  //Bu kısım chatgpt yardımı ile yapıldı.
+            if (Time.time >= nextAttackTime)
+            {
+                playerHealth.TakeDamage(damagePerHit);
+                nextAttackTime = Time.time + attackCooldown;
+            }
+        }
+        if (distance > 2)
+            animator.SetBool("isAttacking", false);
+    }
+
+    //OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+    override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+
+    }
+
+    //OnStateMove is called right after Animator.OnAnimatorMove()
+    override public void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that processes and affects root motion
+    }
+
+    //OnStateIK is called right after Animator.OnAnimatorIK()
+    override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // Implement code that sets up animation IK (inverse kinematics)
+    }
+}
+
+
+//Zombie.cs//
+
+using UnityEngine;
+using UnityEngine.UI;
+
+// GDTitans youtube kanalının "Unity Third Person Game" video serisindeki "3D ENEMY AI in UNITY - (E03): TAKE DAMAGE & DEATH" ve "3D ENEMY AI in UNITY - (E04): HEALTH BAR" adlı videodan yardım alınmıştır.
+
+public class Zombie : MonoBehaviour
+{
+    private int currentHealth = 100;
+    public Animator animator;
+    public Slider healthBar;    // Bu satır Health Bar alanını Inspector’a ekler!
+
+    private void Start()
+    {
+        if (healthBar != null)
+            healthBar.maxValue = currentHealth;
+
+        GameManager.Instance.RegisterZombie(this); // zombiyi kayıt et //chatGPT yardımı alındı
+    }
+
+    void Update()
+    {
+        if (healthBar != null)
+            healthBar.value = currentHealth;
+    }
+
+    public void TakeDamage(int damageAmount)
+    {
+        currentHealth -= damageAmount;
+
+        if (currentHealth <= 0)
+        {
+            animator.SetTrigger("die");
+            GameManager.Instance.UnregisterZombie(this); // zombiyi sil  //chatGPT yardımı alındı
+            Destroy(gameObject, 5f);          // 5 saniye sonra yok zombiyi yok eder
+        }
+        else
+        {
+            animator.SetTrigger("damage");
+        }
+    }
+}
+
+
+//GameManager.cs//
+
+using System.Collections.Generic;
+using UnityEngine;
+
+// Bu script chatGPT den yardım alınarak yapıldı
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance;
+    private List<Zombie> activeZombies = new List<Zombie>();
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
+    public void RegisterZombie(Zombie z)
+    {
+        if (!activeZombies.Contains(z))
+            activeZombies.Add(z);
+    }
+
+    public void UnregisterZombie(Zombie z)
+    {
+        if (activeZombies.Contains(z))
+            activeZombies.Remove(z);
+
+        if (activeZombies.Count == 0)
+        {
+            // 🟥 Tüm zombiler öldü ⇒ oyun bitti
+            FindObjectOfType<PauseMenu>().GameOverState();
+        }
+    }
+}
+
+
+//PauseMenu.cs//
+
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class PauseMenu : MonoBehaviour
+{
+    [Header("UI References")]
+    public GameObject pauseMenuUI;       // Panel veya Canvas referansı
+    public Button resumeButton;
+    public static bool GameIsPaused = false; // Global flag (ThirdPersonController scriptinden erişilir)
+    private bool isGameOver = false;
+
+    void Awake()
+    {
+        Time.timeScale = 1f;             // Oyun başında zaman normal olsun
+        if (pauseMenuUI != null)
+            pauseMenuUI.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (isGameOver) return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (GameIsPaused)
+                Resume();
+            else
+                Pause();
+        }
+    }
+
+    public void Resume()
+    {
+        pauseMenuUI.SetActive(false);
+        Time.timeScale = 1f;
+        GameIsPaused = false;            
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void Pause()
+    {
+        pauseMenuUI.SetActive(true);
+        Time.timeScale = 0f;
+        GameIsPaused = true;            
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void RestartGame()
+    {
+        Time.timeScale = 1f;
+        GameIsPaused = false;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    //public void GoToMainMenu()
+    //{
+    //Time.timeScale = 1f; // oyunu normale döndür
+    //UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    //}
+
+    public void QuitGame()
+    {
+        Debug.Log("Oyun kapatılıyor...");
+        Application.Quit();
+
+    #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;  // oyunu play modundan çıkararak oyunu kapatmış olur. Not: Kod chatGPT'den alındı.
+    #endif
+    }
+
+    // chatGPT yardımı alındı
+    public void GameOverState()
+    {
+        isGameOver = true;
+        Time.timeScale = 4f;
+        pauseMenuUI.SetActive(true);
+
+        if (resumeButton != null) 
+        {
+            resumeButton.interactable = false;
+            resumeButton.gameObject.SetActive(false);
+        }            
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;        
+    }
+}
+
+
+//PlayerHealth.cs//
+
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class PlayerHealth : MonoBehaviour
+{
+    [SerializeField] private int maxHealth = 100;
+    private int currentHealth;
+    private bool isDead = false;
+    public Animator animator;
+    public Slider healthBar;
+
+    void Start()
+    {
+        currentHealth = maxHealth;
+        if (healthBar != null)
+        {
+            healthBar.maxValue = maxHealth;
+            healthBar.value = currentHealth;
+        }
+    }
+
+    void Update()
+    {
+        if (healthBar != null)
+            healthBar.value = currentHealth;
+    }
+
+    public void TakeDamage(int damageAmount)
+    {
+        if (isDead) return;
+
+        currentHealth -= damageAmount;
+
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            isDead = true;
+            animator.SetTrigger("Die");
+            
+            FindObjectOfType<PauseMenu>().GameOverState(); // PauseMenu scriptindeki sınıfı içerisinde GameOverState() fonksiyonunu bulur ve aktif eder.
+            StartCoroutine(RemoveAfterDelay());
+        }
+        else
+        {
+            animator.SetTrigger("Damage");
+        }
+    }
+
+    private IEnumerator RemoveAfterDelay()
+    {
+        yield return new WaitForSeconds(4.5f);
+        Destroy(gameObject);
+    }
+}
+
+
+//WeaponHandler.cs//
+
+using UnityEngine; // Unity motorunun temel işlevlerine erişim sağlar (GameObject, Component, vb.).
+using StarterAssets; // Starter Assets paketindeki karakter kontrolcüleri gibi sınıfları kullanmak için.
+using UnityEngine.Animations.Rigging; // Unity'nin Animasyon Rigging sistemi (IK, vb.) bileşenlerine erişim sağlar.
+using Unity.Cinemachine; // Cinemachine sanal kamera sistemine erişim sağlar.
+using System.Collections; // Coroutine (eş zamanlı çalışan rutinler) kullanmak için gereklidir.
+using TMPro; //  TextMeshPro UI kullanımı için eklendi
+
+// Bu script, üçüncü şahıs nişancı oyunlarında silah tutma, nişan alma, atış yapma, kamera ve IK geçişlerini yönetir.
+//Youtube "Thunder Dev" adlı kanalın "Unity Third Person Shooter Tutorial – Smooth Aiming & Shooting" isimli videosundan yardım alındı.
+public class WeaponHandler : MonoBehaviour
+{
+    // === REFERANSLAR ===
+    [Header("References")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private CinemachineThirdPersonFollow cm_camera; // Cinemachine kamerasının takip bileşenine referans. Nişan alma sırasında kamera pozisyonunu değiştirmek için kullanılır.
+    private Animator anim; // Karakterin Animator bileşenine referans. Animasyonları (nişan alma, ateş etme) kontrol etmek için.
+    private ThirdPersonController controller; // StarterAssets'ten gelen karakter hareket kontrolcüsüne referans. Nişan alırken yana yürüme (strafe) modunu etkinleştirmek için.
+
+    // === ATIŞ AYARLARI ===
+    [Header("Shooting")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private float fireRate = 0.09f; // Silahın atış hızı (iki atış arasındaki minimum bekleme süresi).
+    [SerializeField] private float shootBlendTime = 0.075f; // Atış animasyonuna geçiş (crossfade) süresi.
+    [SerializeField] private string shootStateName = "Fire_Rifle"; // Atış animasyonunun Animator'daki state adı.
+    [SerializeField] private AudioClip shootSound; // Atış sırasında çalınacak ses klibi.
+    [SerializeField] private ParticleSystem muzzleFlash; // Namlu alevi (muzzle flash) parçacık sistemi efekti.
+    private bool canShoot = true; // Ateş edip edemeyeceğimizi kontrol eden bayrak (fireRate ile kontrol edilir).
+
+    // === RELOAD (ŞARJÖR YENİLEME) ===
+    [Header("Reload Settings")]
+    [SerializeField] private int maxAmmo = 30;          // Şarjör kapasitesi
+    private int currentAmmo;                            // Mevcut mermi
+    [SerializeField] private float reloadTime = 2f;     // Şarjör yenileme süresi
+    private bool isReloading = false;                   // Şarjör değiştiriliyor mu?
+    [SerializeField] private string reloadStateName = "Reload"; // Animator’daki reload state adı
+
+    // === NİŞAN ALMA (AIMING) AYARLARI ===
+    [Header("Aiming")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private float cameraTransitionSpeed = 7f; // Kamera pozisyonu geçişlerinin yumuşaklık hızı.
+    [SerializeField] private float ikTransitionSpeed = 10f; // IK ağırlığının geçiş yumuşaklık hızı.
+    [SerializeField] private MultiAimConstraint aimIk; // Silahın hedefe bakmasını sağlayan MultiAimConstraint IK bileşenine referans.
+    [Space(10)] // Inspector'da görsel boşluk bırakır.
+    [SerializeField] private float aimVerticalArmLength = 0.2f; // Nişan alırken Cinemachine'in dikey kol uzunluğu.
+    [SerializeField] private float aimCameraSide = 0.75f; // Nişan alırken kameranın yana kayma miktarı (omuz üstü nişan).
+    [SerializeField] private float aimCameraDistance = 0.85f; // Nişan alırken kameranın karakterden uzaklığı.
+    private float defaultVerticalArmLength; // Nişan almıyorken varsayılan dikey kol uzunluğu.
+    private float defaultCameraSide; // Nişan almıyorken varsayılan yana kayma miktarı.
+    private float defaultCameraDistance; // Nişan almıyorken varsayılan kamera uzaklığı.
+
+    public bool Aiming { get; private set; } // Nişan alma durumunu tutan ve dışarıdan sadece okunabilen özellik.
+
+    // === KULLANICI ARAYÜZÜ (UI) ===
+    [Header("UI")] // Inspector penceresinde başlık oluşturur.
+    [SerializeField] private GameObject crosshair; // Nişan imleci (crosshair) GameObject'ine referans.
+
+    [SerializeField] private TextMeshProUGUI ammoText; // Mermi sayısını gösterecek UI elementi
+
+    private void Start()
+    {
+        anim = GetComponent<Animator>(); // Script'in bulunduğu GameObject'teki Animator bileşenini alır.
+        controller = GetComponent<ThirdPersonController>(); // ThirdPersonController bileşenini alır.
+
+        // Cinemachine kamerasının varsayılan pozisyon ayarlarını kaydederek nişan alma bitince geri dönülmesini sağlar.
+        defaultVerticalArmLength = cm_camera.VerticalArmLength;
+        defaultCameraSide = cm_camera.CameraSide;
+        defaultCameraDistance = cm_camera.CameraDistance;
+
+        UpdateAmmoUI(); // Başlangıçta mermi sayısını ekrana yaz
+    }
+
+    // Her karede bir kez çağrılır. Oyun mantığının çoğunu içerir.
+    private void Update()
+    {
+        // Reload sırasında hiçbir işlem yapılmaz (sadece yürüme/nişan izinli)
+        if (isReloading)
+        {
+            anim.SetBool("Aiming", false);
+            controller.Strafe = false;
+            return;
+        }
+
+        // === GİRİŞ (INPUT) YÖNETİMİ ===
+        Aiming = Input.GetButton("Fire2"); // "Fire2" (varsayılan sağ fare tuşu) basılı mı kontrol eder.
+        bool shootInp = Input.GetButton("Fire1"); // "Fire1" (varsayılan sol fare tuşu) basılı mı kontrol eder.
+
+        // === ANİMASYONLAR VE HAREKET ===
+        anim.SetBool("Aiming", Aiming); // Animator'daki "Aiming" boolean parametresini günceller (nişan alma animasyonu).
+        controller.Strafe = Aiming; // Nişan alıyorsa (Aiming true ise) karakteri yana yürüme (strafe) moduna geçirir.
+
+        // === KAMERA AYARLAMA (SMOOTH TRANSITION) ===
+        // Nişan alma durumuna (Aiming) göre hedeflenen kamera pozisyon değerlerini (aim veya default) belirler.
+        float targetVerticalArmLength = Aiming ? aimVerticalArmLength : defaultVerticalArmLength;
+        float targetSide = Aiming ? aimCameraSide : defaultCameraSide;
+        float targetDistance = Aiming ? aimCameraDistance : defaultCameraDistance;
+
+        // Cinemachine kamera parametrelerini, belirlenen hedefe doğru yumuşak bir geçişle (Mathf.Lerp) hareket ettirir.
+        cm_camera.VerticalArmLength = Mathf.Lerp(cm_camera.VerticalArmLength, targetVerticalArmLength, cameraTransitionSpeed * Time.deltaTime);
+        cm_camera.CameraSide = Mathf.Lerp(cm_camera.CameraSide, targetSide, cameraTransitionSpeed * Time.deltaTime);
+        cm_camera.CameraDistance = Mathf.Lerp(cm_camera.CameraDistance, targetDistance, cameraTransitionSpeed * Time.deltaTime);
+
+        // === KULLANICI ARAYÜZÜ (UI) ===
+        crosshair.SetActive(Aiming); // Nişan alınıyorsa crosshair'ı gösterir, aksi halde gizler.
+
+        // === TERS KİNEMATİK (IK) YÖNETİMİ ===
+        // Nişan alınıyorsa IK ağırlığını 1'e, almıyorsa 0'a hedefler.
+        float targetWeight = Aiming ? 1 : 0;
+        // IK ağırlığını yumuşak bir şekilde hedeflenen değere doğru hareket ettirir.
+        aimIk.weight = Mathf.Lerp(aimIk.weight, targetWeight, ikTransitionSpeed * Time.deltaTime);
+
+        // === RELOAD GİRİŞİ ===
+        if (Input.GetKeyDown(KeyCode.R) && currentAmmo < maxAmmo)
+        {
+            StartCoroutine(Reload());
+            return;
+        }
+
+        // === Mermi bittiyse otomatik reload ===
+        if (currentAmmo <= 0)
+        {
+            StartCoroutine(Reload());
+            return;
+        }
+
+        // === ATIŞ KONTROLÜ ===
+        if (shootInp && Aiming) // Ateş etme tuşuna basıldıysa VE karakter nişan alıyorsa.
+            Shoot(); // Atış fonksiyonunu çağırır.
+    }
+
+    // Silahın ateş etme mantığını içeren fonksiyon.
+    private void Shoot()
+    {
+        if (!canShoot || currentAmmo <= 0 || isReloading)
+            return;
+
+        currentAmmo--; // her atışta 1 mermi azalır
+        UpdateAmmoUI(); // Mermi sayısını ekranda güncelle
+
+        AudioSource.PlayClipAtPoint(shootSound, transform.position); // Atış sesini karakterin pozisyonunda bir kerelik oynatır.
+        muzzleFlash.Play(); // Namlu alevi efektini başlatır.
+        anim.CrossFadeInFixedTime(shootStateName, shootBlendTime); // Atış animasyonunu belirlenen süre içinde oynatmaya başlar.
+        StartCoroutine("ResetFireRate"); // Ateş etme bekleme süresini başlatan coroutine'i çağırır.
+
+        //chatGPT den yardım alındı bu kısım için
+        // === IŞIN FIRLATMA (RAYCAST) İLE HEDEF TESPİTİ ===
+        // Kameranın ekran ortasından (crosshair'ın pozisyonu) bir ışın (ray) oluşturur.
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); // Viewport'ta (0,0) alt sol, (1,1) sağ üsttür. (0.5, 0.5) tam ortadır.
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f)) // Raycast'i fırlatır. Eğer ışın bir cisme çarparsa ve mesafe 100f içindeyse:
+        {
+            Debug.Log("Hit Object: " + hit.collider.name + " | Tag: " + hit.collider.tag);
+            Debug.DrawRay(ray.origin, ray.direction * hit.distance, Color.red, 1f);
+
+            Zombie zombi = hit.collider.GetComponentInParent<Zombie>(); // Çarptığı cismin collider'ında "Zombie" bileşeni var mı diye bakar.
+            if (zombi != null)  // Eğer bir Zombi bileşeni bulunursa.
+            {
+                // Çarptığı collider'ın etiketi "ZombieHead" ise 100 hasar (kafa vuruşu), aksi takdirde 34 hasar belirler.
+                int damage = hit.collider.CompareTag("ZombieHead") ? 100 : 34; // Kafaya ateş edildiğinde tek atışla zombi ölür onun dışındaki bölgelere daha az hasar verili
+                zombi.TakeDamage(damage);  // Zombi'nin hasar alma fonksiyonunu çağırır.
+
+                if (hit.collider.CompareTag("ZombieHead"))
+                    Debug.Log("HEADSHOT!");
+            }
+        }
+    }
+
+    // Ateş etme bekleme süresini (fireRate) yöneten coroutine.
+    private IEnumerator ResetFireRate()
+    {
+        canShoot = false; // Hemen yeni bir atışı engeller.
+        yield return new WaitForSeconds(fireRate); // 'fireRate' saniye kadar bekler.
+        canShoot = true; // Bekleme süresi bittikten sonra tekrar atış yapılmasına izin verir.
+    }
+
+    private IEnumerator Reload()
+    {
+        isReloading = true;
+        canShoot = false;
+
+        Debug.Log("Reloading...");
+
+        // Animator’a reload trigger gönder
+        anim.CrossFadeInFixedTime(reloadStateName, 0.1f);
+
+        yield return new WaitForSeconds(reloadTime); // reload süresi kadar bekle
+
+        currentAmmo = maxAmmo;
+        UpdateAmmoUI(); // Reload sonrası mermi sayısını güncelle
+
+        isReloading = false;
+        canShoot = true;
+
+        Debug.Log("Reload complete!");
+    }
+
+    // Yeni: Mermi sayısını UI'da gösteren fonksiyon
+    private void UpdateAmmoUI()
+    {
+        if (ammoText != null)
+            ammoText.text = currentAmmo + " / " + maxAmmo; // örnek: 29 / 30
+    }
+}
+
+
+//SafeZone.cs//
+
+using UnityEngine;
+
+public class SafeZone : MonoBehaviour
+{
+    public GameObject winPanel;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            Debug.Log("Safe zone reached!");
+            winPanel.SetActive(true);
+
+            // Oyunu durdur
+            Time.timeScale = 0f;
+
+            // Farenin görünür ve serbest olmasını sağla
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
+            // (Opsiyonel) Oyuncunun hareket scriptini devre dışı bırak
+            // other.GetComponent<PlayerMovement>().enabled = false;
+        }
+    }
+}
+
+
+//WinMenu.cs//
+
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class WinMenu : MonoBehaviour
+{
+    public void RestartLevel()
+    {
+        Time.timeScale = 1f; // oyunu devam ettir
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // sahneyi yeniden yükle
+    }
+
+    public void QuitGame()
+    {
+        Debug.Log("Quit Game");
+        Time.timeScale = 1f;
+
+        // Eğer ana menü sahnen varsa, onun adını buraya yaz:
+        // SceneManager.LoadScene("MainMenu");
+
+        // Eğer tamamen çıkmak istiyorsan:
+        Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false; // editörde testi durdurur
+#endif
+    }
+}
