@@ -55,7 +55,6 @@
 
 ## 🎯 Oyundaki Temel Mekanikler
 - Yürüyüş, koşu, zıplama
-- Çömelme
 - Niişan alma ve ateş etme
 - Mermi-Şarjör sınırı
 - Zombi AI: Patrol, Chase, Attack, Damage, Death
