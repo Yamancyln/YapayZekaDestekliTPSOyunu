@@ -44,6 +44,55 @@
 - Pause Menü tasarlandı ve oyun durduğunda devreye girer.
 - Diğer menüler (Ana menü, Ayarlar) hazırlansa da finalde devre dışı bırakıldı.
 
+###Kullanılan Teknik ve Mimari Yapılar
+---
+
+## 🛠️ Proje Geliştirme Mimarisi ve Teknikleri
+
+Bu proje, Unity motorunun standart özelliklerini ve çeşitli programlama kalıplarını kullanarak bir Üçüncü Şahıs Nişancı (TPS) ve Düşman Yapay Zekası (AI) sistemi oluşturmuştur.
+
+### 1. Yapısal Mimariler ve Kalıplar
+
+#### A. Durum Makinesi (State Machine) Mimarisi
+Düşman (Zombi) yapay zekası, Unity'nin `StateMachineBehaviour` sınıfı kullanılarak bir **Durum Makinesi** mimarisi ile tasarlanmıştır. Bu, düşman davranışlarının (Boşta Kalma, Devriye Gezme, Kovalama ve Saldırma) birbirinden net bir şekilde ayrılmasını sağlar.
+
+* **`IdleState.cs` (Boşta Kalma):** Düşmanın hiçbir şey yapmadığı, ancak bir sayaç ile belirli bir süre sonra **Devriye Gezme**'ye geçmeye veya oyuncu menzile girerse hemen **Kovalama**'ya geçmeye karar verdiği durumdur.
+* **`PatrolState.cs` (Devriye Gezme):** Düşmanın `NavMeshAgent` kullanarak rastgele belirlenen yol noktaları (`WayPoints`) arasında hareket ettiği durumdur. Süresi dolunca **Boşta Kalma**'ya döner veya oyuncuyu görünce **Kovalama**'ya geçer.
+* **`ChaseState.cs` (Kovalama):** Düşmanın `NavMeshAgent` ile hızını artırarak doğrudan oyuncunun pozisyonuna ilerlediği durumdur. Oyuncu çok yaklaşırsa **Saldırma**'ya, çok uzaklaşırsa Devriye veya Boşta Kalma'ya geri döner.
+* **`AttackState.cs` (Saldırma):** Düşmanın oyuncuya belirli bir mesafede durup, bir soğuma süresi (`attackCooldown`) ile hasar verdiği durumdur.
+
+#### B. Component-Based Architecture (Bileşen Tabanlı Mimari)
+Unity'nin doğal yapısı gereği, her bir işlevsellik bir `MonoBehaviour` bileşeni (script) içine yerleştirilmiştir.
+
+* **`ThirdPersonController.cs`:** Oyuncu hareketi, kamera dönüşü ve kullanıcı girişi gibi temel karakter kontrol işlevlerini yönetir.
+* **`Zombie.cs`:** Düşmanın sağlık yönetimi, hasar alma ve ölme animasyonları gibi düşmana özgü verileri tutar.
+* **`PlayerHealth` (Kullanılan fakat kodu sunulmayan):** Oyuncunun canını yöneten, düşman saldırısı tarafından çağrılan bir bileşendir.
+
+### 2. Yapay Zeka ve Navigasyon Teknikleri
+
+* **NavMesh Sistemi:** `PatrolState` ve `ChaseState` script'lerinde `UnityEngine.AI.NavMeshAgent` bileşeni kullanılarak düşmanların oyun dünyasında dinamik olarak yol bulması ve engellerden kaçınması sağlanmıştır.
+* **Hedefe Yönelme (LookAt):** `AttackState` içinde `animator.transform.LookAt(player);` komutu kullanılarak düşmanın saldırmadan önce doğrudan oyuncuya dönmesi sağlanmıştır.
+* **Menzil Kontrolü:** Davranışlar arasındaki geçişler (`isChasing`, `isAttacking`, `isPatrolling` gibi Animator parametreleri) `Vector3.Distance` ile oyuncu ile düşman arasındaki mesafeye bağlı olarak tetiklenir (`chaseRange` = 7f, saldırı menzili $\approx$ 1.5f, kovalama bırakma menzili > 15).
+* **Saldırı Soğuma Süresi (`Attack Cooldown`):** `AttackState` içinde `Time.time >= nextAttackTime` kontrolü ile düşmanın sürekli değil, belirlenen bir aralıkta (1.5 saniye) hasar vermesi sağlanmıştır.
+
+### 3. Kontrol ve Girdiler
+
+* **Unity Input System:** Oyuncu girdileri (`UnityEngine.InputSystem` ve `PlayerInput`) kullanılarak modern bir giriş sistemi entegrasyonu yapılmıştır.
+* **Karakter Hareketi:** `ThirdPersonController` içinde zıplama, yer çekimi, yürüme, koşma, **yan yürüme (Strafe)** ve **eğilme (Crouching)** gibi karmaşık hareketler Character Controller bileşeni ile yönetilir.
+* **Hız Yönetimi:** Hız değişimleri, daha yumuşak bir his sağlamak için `Mathf.Lerp` fonksiyonu ile yumuşak geçişli (organik) olarak uygulanmıştır.
+
+### 4. Animasyon Yönetimi
+
+* **Animator Parametreleri:** Animasyonlar arasındaki geçişler ve hareketler, `animator.SetBool`, `animator.SetFloat` ve `animator.SetTrigger` metotları ile yönetilir (`_animIDSpeed`, `isChasing`, `die` vb.).
+* **Hareket Senkronizasyonu:** `ThirdPersonController` içinde, hareket hızı (`_speed`) doğrudan animasyon hızına (`_animIDSpeed`) yansıtılarak hareket ve animasyon senkronize edilir.
+
+### 5. Yardımcı Teknikler
+
+* **GameManager (Kullanılan fakat kodu sunulmayan):** `Zombie.cs` dosyasındaki `RegisterZombie` ve `UnregisterZombie` çağrıları, oyundaki zombi sayısını veya durumunu merkezileştirilmiş bir `GameManager` (Yönetici) sınıfı ile takip etme yönteminin kullanıldığını gösterir.
+* **Harici Kaynak Kullanımı:** Kod bloklarının başında belirtildiği gibi, çeşitli işlevler için **GDTitans** ve **Thunder Dev** gibi YouTube kanallarındaki öğreticilerden faydalanılmıştır.
+
+  
+
 ##  Literatür ve Kaynaklar
 - Unity Asset Store: Starter Asset - Third Person Controller
 - Mixamo.com: Karakter ve animasyonlar
