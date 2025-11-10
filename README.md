@@ -46,7 +46,7 @@
 - GDTitans YouTube: TPS oyun serisi
 - Unity Forum ve ChatGPT desteği
 
-## ⚡ Karşılaşılan Teknik Zorluklar
+##  Karşılaşılan Teknik Zorluklar
 - Silahın karakterin eline doğru hizalanması
 - Kafa collider'ları ile headshot hasar algısı
 - Pause menü ve Game Over ekranlarının kontrolü
@@ -61,7 +61,7 @@
 - Hasar alma ve can barı görseli
 - Oyun bitirme durumu
 
-## 🚀 Kazanımlar
+##  Kazanımlar
 Bu projeyle birlikte:
 - Unity ve oyun geliştirme bilgisi edinildi.
 - Oyun fiziği, animasyon kontrolü ve yapay zeka gibi konularda tecrübe kazanıldı.
