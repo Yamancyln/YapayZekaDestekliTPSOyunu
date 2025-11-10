@@ -1,15 +1,15 @@
 # Yapay Zeka Destekli TPS Oyunu: **Son Kale - Zombi İstilası**
 
-## 🌎 Proje Hakkında
+##  Proje Hakkında
 
 "Son Kale: Zombi İstilası", oyuncunun zombilerle dolu bir kalede hayatta kalmaya çalıştığı bir TPS (Third Person Shooter) oyunudur. Unity oyun motoru ve C# dili kullanılarak geliştirilmiştir. Oyuncu karakteri nişan alabilir, ateş edebilir, çömelip ilerleyebilirken, zombiler ise FSM tabanlı bir yapay zekayla devriye gezer, oyuncuyu takip eder ve yakın mesafede sıkıştırdıklarında saldırarak hasar verir.
 
-## 💻 Platform
+##  Platform
 
 - Unity 6000.0.60f1 LTS (URP tabanlı 3D proje)
 - Hedef platform: PC (Windows)
 
-## 👥 Takım Üyeleri ve Katkı Alanları
+##  Takım Üyeleri ve Katkı Alanları
 
 ### Karakter ve Kontroller
 - Mixamo karakteri import edilerek avatar ayarları yapıldı.
@@ -39,7 +39,7 @@
 - Pause Menü tasarlandı ve oyun durduğunda devreye girer.
 - Diğer menüler (Ana menü, Ayarlar) hazırlansa da finalde devre dışı bırakıldı.
 
-## 📈 Literatür ve Kaynaklar
+##  Literatür ve Kaynaklar
 - Unity Asset Store: Starter Asset - Third Person Controller
 - Mixamo.com: Karakter ve animasyonlar
 - Thunder Dev YouTube: Niişan alma ve ateş etme tutorialları
@@ -53,7 +53,7 @@
 - Kamera kontrolü ile nişan alma hareketlerinin çakışmaması
 - Zombilerin birbirinden bağımsız olarak devriye ve saldırı davranışları
 
-## 🎯 Oyundaki Temel Mekanikler
+##  Oyundaki Temel Mekanikler
 - Yürüyüş, koşu, zıplama
 - Niişan alma ve ateş etme
 - Mermi-Şarjör sınırı
@@ -96,7 +96,7 @@ Bu projeyle birlikte:
    └︎ g15.jpg
 ```
 
-## 🔧 Kurulum
+##  Kurulum
 
 1. Unity 6000.0.60f1 LTS kurulu olmalıdır.
 2. Reponun klonlanması:
@@ -105,7 +105,7 @@ Bu projeyle birlikte:
    ```
 3. Unity Hub ile proje açılmalıdır.
 
-## ✍️ Lisans
+##  Lisans
 Bu proje eğitim ve proje ödevi amaçlı geliştirilmiştir. Tüm haklar proje ekibine aittir.
 
 ---
