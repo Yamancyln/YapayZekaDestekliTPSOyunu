@@ -9,12 +9,7 @@
 
 Özel Kuvvetler ajanı Kenshin, zombi istilasına uğrayan bölgede tek başına kalmıştı. Ekibi kaybolmuştu ve elindeki tüfek, kalabalık sürülere karşı son savunmasıydı. Görev basitti: Telsizden gelen son koordinatlardaki Yeşil Bölge'ye, yani çalışan radyo istasyonuna ulaşmak. Burası, insanlık için yardım çağrısı yapabileceği son umut noktasıydı. Kenshin, bitmek bilmeyen zombi uğultusuna karşı çelik gibi iradesiyle, yıkılmış binaların arasından hedefine ilerledi. Tek bir amacı vardı: Ulaş ve Çağrı Yap.
 
-##  Platform
 
-- Unity 6000.0.60f1 LTS (URP tabanlı 3D proje)
-- Hedef platform: PC (Windows)
-
-##  Takım Üyeleri ve Katkı Alanları
 
 ### Karakter ve Kontroller
 - Mixamo karakteri import edilerek avatar ayarları yapıldı.
@@ -159,10 +154,17 @@ Bu projeyle birlikte:
    ```
 3. Unity Hub ile proje açılmalıdır.
 
+4. ##  Platform
+
+- Unity 6000.0.60f1 LTS (URP tabanlı 3D proje)
+- Hedef platform: PC (Windows)
+
 ##  Lisans
 Bu proje eğitim ve proje ödevi amaçlı geliştirilmiştir. Tüm haklar proje ekibine aittir.
 
 ---
+
+##  Takım Üyeleri ve Katkı Alanları
 
 Hazırlayanlar: **Yaman Ceylan, Ferhat Sezgin, Efe Aydın**
 
