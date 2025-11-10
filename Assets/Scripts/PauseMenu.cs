@@ -10,6 +10,18 @@ public class PauseMenu : MonoBehaviour
     public static bool GameIsPaused = false; // Global flag (ThirdPersonController scriptinden erişilir)
     private bool isGameOver = false;
 
+    // GÖREV METNİ ENTEGRASYONU:
+    // Bu metin, Inspector'da büyük bir kutu içinde görünür ve Pause Menu'nüzdeki UI Text bileşenine elle yapıştırılmalıdır.
+    [Header("GÖREV METNİ (Kopyalamak İçin)")]
+    [TextArea(10, 20)] // 10 satır minimum, 20 satır maksimum yükseklik
+    public string missionTextToCopy = 
+        "GÖREV:\n\n" +
+        "Dinle Kenshin, burası son temas. Etrafındaki her şey düştü. Artık ekibin yok. Sadece sen kaldın. Elindeki tüfek, kalabalık sürülere karşı son savunman.\n\n" +
+        "Unutma: Görevimiz Basit. Telsizden gelen cızırtılı son koordinatlara odaklan. O lanet olası 'Yeşil Bölge'nin tam yerini bilmiyoruz, bu yüzden bulman gerek. O bölge, çalışan bir radyo istasyonu demek. Başka hiçbir yerde iletişim kuramıyoruz.\n\n" +
+        "İnsanlık için yardım çağrısı yapabileceğimiz son umut noktası o gizli bölge. Yıkılmış binaların arasından, bitmek bilmeyen zombi uğultusuna karşı çelik gibi iradenle ilerleyeceksin. Geride kalan herkesin gözü sende.\n\n" +
+        "Tek bir amacın var: Yeşil Bölge'yi BUL ve Çağrıyı Yap! Hayatta kal, ajan.";
+
+
     void Awake()
     {
         Time.timeScale = 1f;             // Oyun başında zaman normal olsun
@@ -67,7 +79,8 @@ public class PauseMenu : MonoBehaviour
         Application.Quit();
 
     #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;  // oyunu play modundan çıkararak oyunu kapatmış olur. Not: Kod chatGPT'den alındı.
+        // oyunu play modundan çıkararak oyunu kapatmış olur. Not: Kod chatGPT'den alındı.
+        UnityEditor.EditorApplication.isPlaying = false;  
     #endif
     }
 
