@@ -44,10 +44,10 @@
 - Pause Menü tasarlandı ve oyun durduğunda devreye girer.
 - Diğer menüler (Ana menü, Ayarlar) hazırlansa da finalde devre dışı bırakıldı.
 
-###Kullanılan Teknik ve Mimari Yapılar
+## Kullanılan Teknik ve Mimari Yapılar
 ---
 
-## 🛠️ Proje Geliştirme Mimarisi ve Teknikleri
+##  Proje Geliştirme Mimarisi ve Teknikleri
 
 Bu proje, Unity motorunun standart özelliklerini ve çeşitli programlama kalıplarını kullanarak bir Üçüncü Şahıs Nişancı (TPS) ve Düşman Yapay Zekası (AI) sistemi oluşturmuştur.
 
