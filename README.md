@@ -4,6 +4,11 @@
 
 "Son Kale: Zombi İstilası", oyuncunun zombilerle dolu bir kalede hayatta kalmaya çalıştığı bir TPS (Third Person Shooter) oyunudur. Unity oyun motoru ve C# dili kullanılarak geliştirilmiştir. Oyuncu karakteri nişan alabilir, ateş edebilir, çömelip ilerleyebilirken, zombiler ise FSM tabanlı bir yapay zekayla devriye gezer, oyuncuyu takip eder ve yakın mesafede sıkıştırdıklarında saldırarak hasar verir.
 
+
+## Senaryo
+
+Özel Kuvvetler ajanı Kenshin, zombi istilasına uğrayan bölgede tek başına kalmıştı. Ekibi kaybolmuştu ve elindeki tüfek, kalabalık sürülere karşı son savunmasıydı. Görev basitti: Telsizden gelen son koordinatlardaki Yeşil Bölge'ye, yani çalışan radyo istasyonuna ulaşmak. Burası, insanlık için yardım çağrısı yapabileceği son umut noktasıydı. Kenshin, bitmek bilmeyen zombi uğultusuna karşı çelik gibi iradesiyle, yıkılmış binaların arasından hedefine ilerledi. Tek bir amacı vardı: Ulaş ve Çağrı Yap.
+
 ##  Platform
 
 - Unity 6000.0.60f1 LTS (URP tabanlı 3D proje)
